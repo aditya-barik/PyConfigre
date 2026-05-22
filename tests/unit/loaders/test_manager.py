@@ -20,7 +20,7 @@ class TestConfigLoader:
         """
         config = ConfigLoader.detect_and_load(yaml_config_file)
 
-        assert config["app_name"] == "test_application"
+        assert config["app_name"] == "test_application_yaml"
         assert config["debug"] is True
 
     def test_detect_and_load_json(self, json_config_file: Path) -> None:
@@ -33,7 +33,7 @@ class TestConfigLoader:
         """
         config = ConfigLoader.detect_and_load(json_config_file)
 
-        assert config["app_name"] == "test_application"
+        assert config["app_name"] == "test_application_json"
         assert config["debug"] is True
 
     def test_detect_and_load_toml(self, toml_config_file: Path) -> None:
@@ -46,7 +46,7 @@ class TestConfigLoader:
         """
         config = ConfigLoader.detect_and_load(toml_config_file)
 
-        assert config["app_name"] == "test_application"
+        assert config["app_name"] == "test_application_toml"
         assert config["debug"] is True
 
     def test_detect_unsupported_extension(self, temp_dir: Path) -> None:
@@ -103,6 +103,7 @@ class TestConfigLoader:
         """
         assert ConfigLoader.validate_extension("yaml") == "yaml"
         assert ConfigLoader.validate_extension("json") == "json"
+        assert ConfigLoader.validate_extension("toml") == "toml"
 
     def test_validate_extension_case_insensitive(self) -> None:
         """Test that validate_extension normalises to lower-case so that
@@ -110,6 +111,7 @@ class TestConfigLoader:
         """
         assert ConfigLoader.validate_extension(".YAML") == "yaml"
         assert ConfigLoader.validate_extension(".JSON") == "json"
+        assert ConfigLoader.validate_extension(".TOML") == "toml"
 
     def test_validate_extension_unknown_raises(self) -> None:
         """Test that validate_extension raises ValueError for an unregistered

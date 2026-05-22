@@ -23,7 +23,7 @@ class TestTOMLLoader:
         loader = TOMLLoader()
         config = loader(toml_config_file)
 
-        assert config["app_name"] == "test_application"
+        assert config["app_name"] == "test_application_toml"
         assert config["debug"] is True
         assert config["port"] == 9000
 

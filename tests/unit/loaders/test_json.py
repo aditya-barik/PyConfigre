@@ -24,7 +24,7 @@ class TestJSONLoader:
         loader = JSONLoader()
         config = loader(json_config_file)
 
-        assert config["app_name"] == "test_application"
+        assert config["app_name"] == "test_application_json"
         assert config["debug"] is True
         assert config["port"] == 9000
 
