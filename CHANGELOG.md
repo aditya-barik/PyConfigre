@@ -5,9 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] - Unreleased
 
-### ⚙️ CI/CD
+### ✨ New Features
+
+- **`RawConfigbuilder` class** (`builder.py`) — Schema-free configuration pipeline. Provides the full loading, merging, and priority system without requiring a Pydantic model. All pipeline methods (`from_file`, `from_env`, `from_dict`, `set`, `peek`) live on this base class.
+- **`build_dict()` terminal method** (`builder.py`) — Returns the final merged configuration as a plain dictionary. this is the terminal method for schema-free pipelines, analogous to `build()` on `ConfigBuilder`.
+
+### 🔄 Changed
+
+- **`ConfigBuilder` now extends `RawConfigBuilder`** (`builder.py`) — Two-class split: `RawConfigBuilder` is the base class with all pipeline logic; `ConfigBuilder(RawConfigBuilder, Generic[T])` adds typed Pydantic validation via `build()`. All existing `ConfigBuilder` usage is fully backwards-compatible.
+- **Fluent method return types use `Self`** (`builder.py`) — Pipeline methods now return `typing_extensions.Self` instead of a string-literal fprward reference. This gives correct return types through inheritance: calling `.from_file()` on a `ConfigBuilder[AppConfig]` returns `ConfigBuilder[AppConfig]`, not `RawConfigBuilder`.
+- **`RawConfigBuilder` added to public API** (`__init__.py`) — importable via `from pyconfigr import RawConfigBuilder` and included in `__all__`.
+- **Version bumped to `0.2.0`** (`pyproject.toml`)
+
+### 🧪 Tests
+
+- Expanded `tests/unit/test_builder.py` — 57 tests total mirroring `src/pyconfigr/builder.py`: 39 tests covering `RawConfigBuilder` (parent) pipeline, exception handling and inheritance; 18 tests for `ConfigBuilder` (child) smoke tests with `build()`, Pydantic validation, integration, and the shared `_deep_merge` utility.
+
+### 🤖 CI/CD
 
 - **Renamed `ci.yaml` → `python-package.yml`** — follows GitHub Actions naming convention for package workflows
 - **Centralised version constants** (`python-package.yml`) — `UV_VERSION` and `INTEGRATION_PYTHON_VERSION` moved to a top-level `env:` block; no more hardcoded values scattered across jobs
