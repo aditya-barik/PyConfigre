@@ -24,7 +24,7 @@ class TestYAMLLoader:
         loader = YAMLLoader()
         config = loader(yaml_config_file)
 
-        assert config["app_name"] == "test_application"
+        assert config["app_name"] == "test_application_yaml"
         assert config["debug"] is True
         assert config["port"] == 9000
         assert config["server"]["host"] == "localhost"
@@ -39,7 +39,7 @@ class TestYAMLLoader:
         """
         config = ConfigLoader.get_loader("yaml")(yaml_config_file)
 
-        assert config["app_name"] == "test_application"
+        assert config["app_name"] == "test_application_yaml"
         assert config["debug"] is True
 
     def test_yaml_file_not_found(self, temp_dir: Path) -> None:
