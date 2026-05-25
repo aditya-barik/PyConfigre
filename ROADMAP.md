@@ -1,6 +1,6 @@
-# PyConfigr — Development Roadmap
+# PyConfigre — Development Roadmap
 
-- Repository: https://github.com/aditya-barik/PyConfigr
+- Repository: https://github.com/aditya-barik/PyConfigre
 - Package identity: A composable configuration assembly pipeline for Python. Load from any source, merge with intelligent priority, validate with Pydantic — or consume as a plain dict. Built for modern Python teams who want explicit, readable, testable configuration code.
 
 ## Release Timeline
@@ -20,7 +20,7 @@
 
 Initial public release. Multi-format loading (YAML, JSON, TOML, env, dict), fluent ConfigBuilder API, Pydantic validation, full type safety, 98% test coverage across Python 3.10–3.14.
 
-→ [Release Notes](https://github.com/aditya-barik/PyConfigr/releases/tag/v0.1.0) · [CHANGELOG](https://github.com/aditya-barik/PyConfigr/blob/main/CHANGELOG.md#010---2026-02-06)
+→ [Release Notes](https://github.com/aditya-barik/PyConfigre/releases/tag/v0.1.0) · [CHANGELOG](https://github.com/aditya-barik/PyConfigre/blob/main/CHANGELOG.md#010---2026-02-06)
 
 ## v0.1.1 — Correctness Fixes, Test Restructure & Automation ✅
 
@@ -55,7 +55,7 @@ tests/
 
 **GitHub automation:** `pr-lifecycle.yml`, `sync-labels.yml`, `.github/config/` structure, `CONTRIBUTING.md`, `WORKFLOW_ENFORCEMENT.md`.
 
-→ [Release Notes](https://github.com/aditya-barik/PyConfigr/releases/tag/v0.1.1) · [CHANGELOG](https://github.com/aditya-barik/PyConfigr/blob/main/CHANGELOG.md#011---2026-03-26)
+→ [Release Notes](https://github.com/aditya-barik/PyConfigre/releases/tag/v0.1.1) · [CHANGELOG](https://github.com/aditya-barik/PyConfigre/blob/main/CHANGELOG.md#011---2026-03-26)
 
 ## CI Infrastructure Modernisation (Shipped; No Release) ✅
 
@@ -118,7 +118,7 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
 
 ```python
 # Schema-less — no Pydantic needed
-from pyconfigr import RawConfigBuilder
+from pyconfigre import RawConfigBuilder
 
 raw = (
     RawConfigBuilder()
@@ -128,7 +128,7 @@ raw = (
 )
 
 # Typed — existing usage unchanged
-from pyconfigr import ConfigBuilder
+from pyconfigre import ConfigBuilder
 
 config = (
     ConfigBuilder(AppConfig)
@@ -141,7 +141,7 @@ config = (
 ### File structure at v0.2.0
 
 ```
-pyconfigr/
+pyconfigre/
 ├── __init__.py       ← add RawConfigBuilder to __all__
 ├── builder.py        ← RawConfigBuilder + ConfigBuilder (same file, still flat)
 ├── exceptions.py
@@ -162,7 +162,7 @@ pyconfigr/
 
 ## v0.3.0 — New Pipeline Features 📋 Planned
 
-**Goal:** Ship the features that make PyConfigr meaningfully differentiated from `pydantic-settings` and `dynaconf`.
+**Goal:** Ship the features that make PyConfigre meaningfully differentiated from `pydantic-settings` and `dynaconf`.
 
 ### Feature 3.1 — `from_env_layer()`
 
@@ -254,7 +254,7 @@ cfg.env.dev["host"]       # attribute access
 cfg["env"]["dev"]["host"] # subscript access
 ```
 
-**New module:** `pyconfigr/directory.py` — `ConfigNamespace` + `load_directory()`.
+**New module:** `pyconfigre/directory.py` — `ConfigNamespace` + `load_directory()`.
 
 **Tests to add:** 14+ tests covering all access patterns, missing root, non-directory path, unknown extensions (silent skip and explicit raise), `to_dict()` round-trip, read-only enforcement, `recursive=False`, hidden file skipping, and pipeline integration.
 
@@ -276,14 +276,14 @@ config = (
 
 **Condition forms:** callable, 2-tuple `("ENV", "dev")`, 3-tuple with operator (`==`, `!=`, `<`, `<=`, `>`, `>=`, `in`, `not in`), `{"all": [...]}` / `{"any": [...]}` sets, and helpers `env_is()`, `env_in()`, `when_all()`, `when_any()`.
 
-**New module:** `pyconfigr/conditions.py`.
+**New module:** `pyconfigre/conditions.py`.
 
 **Tests to add:** 20+ tests covering all condition forms, all operators, `all`/`any` logic, error cases, helpers, and mixin integration.
 
 **File structure at v0.3.0 (folder conversion)**
 
 ```
-pyconfigr/
+pyconfigre/
 ├── __init__.py
 ├── exceptions.py
 ├── conditions.py           ← new in v0.3.0
@@ -301,7 +301,7 @@ pyconfigr/
 
 Features that complete the differentiator story. Planned after v0.3.0 is stable.
 
-**Secret Backend Loaders** — `from_secrets("aws://...")`, `from_secrets("vault://...")`. New `AWSSecretsLoader` and `VaultLoader` registered via `ConfigLoader.register_loader()`. Optional extras: `pip install pyconfigr[aws]`, `pyconfigr[vault]` and other secret backends.
+**Secret Backend Loaders** — `from_secrets("aws://...")`, `from_secrets("vault://...")`. New `AWSSecretsLoader` and `VaultLoader` registered via `ConfigLoader.register_loader()`. Optional extras: `pip install pyconfigre[aws]`, `pyconfigre[vault]` and other secret backends.
 
 **Config Watching (Hot Reload)** — `build(watch=True)` starts a daemon thread that polls mtime for registered file paths and swaps the config object atomically via `threading.Lock` on change.
 

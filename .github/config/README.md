@@ -1,6 +1,6 @@
 # GitHub Configuration Files
 
-All configuration files for PyConfigr's GitHub automation live here.
+All configuration files for PyConfigre's GitHub automation live here.
 One location, one source of truth. Update here — everything else follows.
 
 ---

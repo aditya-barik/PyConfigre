@@ -1,4 +1,4 @@
-# Contributing to PyConfigr
+# Contributing to PyConfigre
 
 Everything you need to contribute effectively — setup, branching, issues, PRs, and the automation that keeps it all in sync.
 
@@ -27,8 +27,8 @@ Everything you need to contribute effectively — setup, branching, issues, PRs,
 
 ### Install
 ```bash
-git clone https://github.com/aditya-barik/PyConfigr.git
-cd PyConfigr
+git clone https://github.com/aditya-barik/PyConfigre.git
+cd PyConfigre
 ```
 
 ### Create and Activate Virtual Environment, Install `dev` Dependencies
@@ -332,7 +332,7 @@ Triggers on: every PR event (opened, reopened, synchronize, closed).
 1. Merge all PRs for the milestone to `dev`
 2. Update `CHANGELOG.md` on `dev` — move `[Unreleased]` entries under the new version heading and add the comparison link at the bottom
 3. Open a PR from `dev` → `main` with title `[Release] vX.Y.Z — short description`
-4. Close the milestone at https://github.com/aditya-barik/PyConfigr/milestones
+4. Close the milestone at https://github.com/aditya-barik/PyConfigre/milestones
 5. After merging, Tag and push:
     ```bash
     git tag vX.Y.Z

@@ -2,7 +2,7 @@
 
 import pytest
 
-from pyconfigr.exceptions import (
+from pyconfigre.exceptions import (
     ConfigError,
     ConfigLoadError,
     ConfigNotFoundError,

@@ -1,5 +1,5 @@
 """
-PyConfigr — configuration assembly pipeline for Python.
+PyConfigre — configuration assembly pipeline for Python.
 
 Load from any source, merge with priority, validate with Pydantic — or
 consume as a plain dict.  Built for teams who want explicit, readable,
@@ -9,7 +9,7 @@ Examples
 --------
 Schema-less usage (no Pydantic needed)::
 
-    from pyconfigr import RawConfigBuilder
+    from pyconfigre import RawConfigBuilder
 
     raw_config = (
         RawConfigBuilder()
@@ -21,7 +21,7 @@ Schema-less usage (no Pydantic needed)::
 Typed usage with Pydantic validation::
 
     from pydantic import BaseModel
-    from pyconfigr import ConfigBuilder
+    from pyconfigre import ConfigBuilder
 
     class AppConfig(BaseModel):
         debug: bool = False
@@ -64,7 +64,7 @@ from .exceptions import (
 )
 
 try:
-    __version__ = version("pyconfigr")
+    __version__ = version("pyconfigre")
 except PackageNotFoundError:  # pragma: no cover
     __version__ = "0.2.0.dev0"
 

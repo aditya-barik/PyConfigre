@@ -1,4 +1,4 @@
-"""Test suite for pyconfigr.builder — RawConfigBuilder and ConfigBuilder.
+"""Test suite for pyconfigre.builder — RawConfigBuilder and ConfigBuilder.
 
 This module contains unit tests for RawConfigBuilder (Parent-class) followed by
 ConfigBuilder (Child-class) smoke tests, inheritance verification, shared utilities,
@@ -12,9 +12,9 @@ from unittest import mock
 import pytest
 from tests.conftest import ComplexConfig, SimpleConfig
 
-from pyconfigr import ConfigBuilder, RawConfigBuilder
-from pyconfigr.builder import _deep_merge
-from pyconfigr.exceptions import (
+from pyconfigre import ConfigBuilder, RawConfigBuilder
+from pyconfigre.builder import _deep_merge
+from pyconfigre.exceptions import (
     ConfigLoadError,
     ConfigNotFoundError,
     ConfigValidationError,
@@ -384,7 +384,7 @@ class TestRawConfigBuilderExceptionHandling:
 
         raw_config_builder = RawConfigBuilder()
 
-        with mock.patch("pyconfigr.builder.ConfigLoader.detect_and_load") as mock_load:
+        with mock.patch("pyconfigre.builder.ConfigLoader.detect_and_load") as mock_load:
             mock_load.side_effect = RuntimeError("Unexpected error")
 
             with pytest.raises(ConfigLoadError, match="Failed to load configuration"):
@@ -419,7 +419,7 @@ class TestRawConfigBuilderExceptionHandling:
 
         raw_config_builder = RawConfigBuilder()
 
-        with mock.patch("pyconfigr.builder.ConfigLoader.detect_and_load") as mock_load:
+        with mock.patch("pyconfigre.builder.ConfigLoader.detect_and_load") as mock_load:
             mock_load.side_effect = ConfigLoadError("Parse error")
 
             with pytest.raises(ConfigLoadError, match="Parse error"):
@@ -871,7 +871,7 @@ class TestIntegration:
         temp_dir : Path
             Fixture providing a temporary directory.
         """
-        from pyconfigr.loaders import ConfigLoader
+        from pyconfigre.loaders import ConfigLoader
 
         yaml_file = temp_dir / "config.yaml"
         yml_file = temp_dir / "config.yml"
@@ -905,7 +905,7 @@ class TestConfigBuilderValidation:
 class TestDeepMerge:
     """Test deep merge functionality.
 
-    ``_deep_merge`` is a module-level function in ``pyconfigr.builder``.
+    ``_deep_merge`` is a module-level function in ``pyconfigre.builder``.
     Tests import it directly to verify its logic in isolation, independently
     of any builder class.
     """
@@ -966,7 +966,7 @@ class TestDeepMerge:
     def test_deep_merge_module_level_import(self) -> None:
         """Test that _deep_merge is importable and callable at module level.
 
-        Confirms the function is accessible from pyconfigr.builder for any
+        Confirms the function is accessible from pyconfigre.builder for any
         future sibling classes (e.g. RawConfigBuilder) that need to reuse it.
         """
         target: dict = {}

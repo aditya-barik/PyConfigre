@@ -2,7 +2,7 @@
 Use case: optional file loading.
 
 The optional=True parameter is one of the most important ergonomics features
-of PyConfigr — it enables the base-file + environment-override pattern that
+of PyConfigre — it enables the base-file + environment-override pattern that
 most real applications use. These tests verify every variant of that pattern.
 """
 
@@ -11,8 +11,8 @@ from contextlib import contextmanager
 
 import pytest
 
-from pyconfigr import ConfigBuilder
-from pyconfigr.exceptions import ConfigNotFoundError
+from pyconfigre import ConfigBuilder
+from pyconfigre.exceptions import ConfigNotFoundError
 
 from .conftest import SimpleConfig
 

@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from pyconfigr.exceptions import ConfigNotFoundError, ConfigValidationError
-from pyconfigr.loaders import BaseLoader, ENVLoader, JSONLoader, TOMLLoader, YAMLLoader
+from pyconfigre.exceptions import ConfigNotFoundError, ConfigValidationError
+from pyconfigre.loaders import BaseLoader, ENVLoader, JSONLoader, TOMLLoader, YAMLLoader
 
 
 class TestBaseLoader:

@@ -11,7 +11,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from pyconfigr import ConfigBuilder
+from pyconfigre import ConfigBuilder
 
 from .conftest import AppConfig, SimpleConfig
 
