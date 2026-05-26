@@ -1,15 +1,15 @@
 """
 Use case: Pydantic validation through the builder.
 
-PyConfigr's value proposition over raw file parsing is type-safe, validated
+PyConfigre's value proposition over raw file parsing is type-safe, validated
 configuration. These tests verify that validation fires correctly — both for
 success paths and for the specific errors users will encounter in practice.
 """
 
 import pytest
 
-from pyconfigr import ConfigBuilder
-from pyconfigr.exceptions import ConfigValidationError
+from pyconfigre import ConfigBuilder
+from pyconfigre.exceptions import ConfigValidationError
 
 from .conftest import AppConfig, DatabaseConfig, ServerConfig, SimpleConfig
 

@@ -8,8 +8,8 @@ custom loader registration path that makes new formats supported.
 
 import pytest
 
-from pyconfigr import ConfigBuilder
-from pyconfigr.loaders import BaseLoader, ConfigLoader
+from pyconfigre import ConfigBuilder
+from pyconfigre.loaders import BaseLoader, ConfigLoader
 
 from .conftest import SimpleConfig
 

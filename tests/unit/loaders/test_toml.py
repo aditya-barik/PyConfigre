@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from pyconfigr.exceptions import ConfigLoadError
-from pyconfigr.loaders import TOMLLoader
+from pyconfigre.exceptions import ConfigLoadError
+from pyconfigre.loaders import TOMLLoader
 
 
 class TestTOMLLoader:
@@ -23,7 +23,7 @@ class TestTOMLLoader:
         loader = TOMLLoader()
         config = loader(toml_config_file)
 
-        assert config["app_name"] == "test_application"
+        assert config["app_name"] == "test_application_toml"
         assert config["debug"] is True
         assert config["port"] == 9000
 
@@ -66,8 +66,8 @@ class TestTOMLLoaderImportError:
 
         This covers the case where tomllib is None (lines 54-58).
         """
-        # Mock pyconfigr.loaders.toml.tomllib to be None
-        with patch("pyconfigr.loaders.toml.tomllib", None):
+        # Mock pyconfigre.loaders.toml.tomllib to be None
+        with patch("pyconfigre.loaders.toml.tomllib", None):
             loader = TOMLLoader()
             config_file = temp_dir / "config.toml"
             config_file.write_text("key = 'value'")
@@ -98,7 +98,7 @@ class TestTOMLLoaderExceptionHandling:
         # Set a type name that contains 'tomllib'
         mock_error.__class__.__module__ = "tomllib"
 
-        with patch("pyconfigr.loaders.toml.tomllib.load") as mock_load:
+        with patch("pyconfigre.loaders.toml.tomllib.load") as mock_load:
             mock_load.side_effect = mock_error
 
             with pytest.raises(ConfigLoadError, match="Failed to parse TOML"):
@@ -113,7 +113,7 @@ class TestTOMLLoaderExceptionHandling:
         config_file = temp_dir / "config.toml"
         config_file.write_text("key = 'value'")
 
-        with patch("pyconfigr.loaders.toml.tomllib.load") as mock_load:
+        with patch("pyconfigre.loaders.toml.tomllib.load") as mock_load:
             mock_load.side_effect = OSError("I/O Error")
 
             with pytest.raises(ConfigLoadError, match="Failed to load TOML"):
@@ -138,7 +138,7 @@ class TestTOMLLoaderExceptionHandling:
         # Set a type name that contains 'tomli'
         mock_error.__class__.__module__ = "tomli"
 
-        with patch("pyconfigr.loaders.toml.tomllib.load") as mock_load:
+        with patch("pyconfigre.loaders.toml.tomllib.load") as mock_load:
             mock_load.side_effect = mock_error
 
             with pytest.raises(ConfigLoadError, match="Failed to parse TOML"):

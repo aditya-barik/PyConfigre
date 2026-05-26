@@ -5,7 +5,8 @@
     { "prefix": "docs/",     "label": "type:docs"     },
     { "prefix": "refactor/", "label": "type:refactor" },
     { "prefix": "ci/",       "label": "type:ci"       },
-    { "prefix": "test/",     "label": "type:test"     }
+    { "prefix": "test/",     "label": "type:test"     },
+    { "prefix": "release/",  "label": "type:release"  }
   ],
   "pr_title_patterns": [
     { "pattern": "[Fix]",      "label": "type:bug"      },

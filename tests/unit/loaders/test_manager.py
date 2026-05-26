@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pyconfigr.loaders import BaseLoader, ConfigLoader
+from pyconfigre.loaders import BaseLoader, ConfigLoader
 
 
 class TestConfigLoader:
@@ -20,7 +20,7 @@ class TestConfigLoader:
         """
         config = ConfigLoader.detect_and_load(yaml_config_file)
 
-        assert config["app_name"] == "test_application"
+        assert config["app_name"] == "test_application_yaml"
         assert config["debug"] is True
 
     def test_detect_and_load_json(self, json_config_file: Path) -> None:
@@ -33,7 +33,7 @@ class TestConfigLoader:
         """
         config = ConfigLoader.detect_and_load(json_config_file)
 
-        assert config["app_name"] == "test_application"
+        assert config["app_name"] == "test_application_json"
         assert config["debug"] is True
 
     def test_detect_and_load_toml(self, toml_config_file: Path) -> None:
@@ -46,7 +46,7 @@ class TestConfigLoader:
         """
         config = ConfigLoader.detect_and_load(toml_config_file)
 
-        assert config["app_name"] == "test_application"
+        assert config["app_name"] == "test_application_toml"
         assert config["debug"] is True
 
     def test_detect_unsupported_extension(self, temp_dir: Path) -> None:
@@ -103,6 +103,7 @@ class TestConfigLoader:
         """
         assert ConfigLoader.validate_extension("yaml") == "yaml"
         assert ConfigLoader.validate_extension("json") == "json"
+        assert ConfigLoader.validate_extension("toml") == "toml"
 
     def test_validate_extension_case_insensitive(self) -> None:
         """Test that validate_extension normalises to lower-case so that
@@ -110,6 +111,7 @@ class TestConfigLoader:
         """
         assert ConfigLoader.validate_extension(".YAML") == "yaml"
         assert ConfigLoader.validate_extension(".JSON") == "json"
+        assert ConfigLoader.validate_extension(".TOML") == "toml"
 
     def test_validate_extension_unknown_raises(self) -> None:
         """Test that validate_extension raises ValueError for an unregistered
@@ -195,7 +197,7 @@ class TestConfigLoaderErrorHandling:
         """Test that reset() removes a loader registered after import.
 
         After reset(), the custom loader type must not appear in
-        :meth:`~pyconfigr.loaders.ConfigLoader.list_loaders`.
+        :meth:`~pyconfigre.loaders.ConfigLoader.list_loaders`.
         """
 
         class TempLoader(BaseLoader):
@@ -213,7 +215,7 @@ class TestConfigLoaderErrorHandling:
         """Test that reset() removes extensions registered after import.
 
         After reset(), the custom extension must not appear in
-        :meth:`~pyconfigr.loaders.ConfigLoader.list_extensions`.
+        :meth:`~pyconfigre.loaders.ConfigLoader.list_extensions`.
         """
 
         class TempLoader(BaseLoader):
@@ -262,8 +264,8 @@ class TestConfigLoaderErrorHandling:
         has not been taken yet.
 
         This guards the edge case where someone imports ``ConfigLoader``
-        directly from ``pyconfigr.loaders.manager`` without going through
-        the ``pyconfigr`` package, which is the only path that calls
+        directly from ``pyconfigre.loaders.manager`` without going through
+        the ``pyconfigre`` package, which is the only path that calls
         ``_save_builtin_snapshot()``.
 
         The test temporarily nulls the snapshot and must restore it in
@@ -272,7 +274,7 @@ class TestConfigLoaderErrorHandling:
         original = ConfigLoader._builtin_snapshot
         try:
             ConfigLoader._builtin_snapshot = None
-            with pytest.raises(RuntimeError, match="Import 'pyconfigr' at least once"):
+            with pytest.raises(RuntimeError, match="Import 'pyconfigre' at least once"):
                 ConfigLoader.reset()
         finally:
             ConfigLoader._builtin_snapshot = original

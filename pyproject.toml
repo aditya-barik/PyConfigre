@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyconfigr"
-version = "0.1.1"
+name = "pyconfigre"
+version = "0.2.0"
 description = "Flexible configuration management with Pydantic validation, YAML/JSON/TOML support, and fluent API"
 readme = "README.md"
 license = {text = "MIT"}
@@ -49,12 +49,12 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/aditya-barik/PyConfigr"
-Documentation = "https://github.com/aditya-barik/PyConfigr/blob/main/README.md"
-Repository = "https://github.com/aditya-barik/PyConfigr"
-Issues = "https://github.com/aditya-barik/PyConfigr/issues"
-Changelog = "https://github.com/aditya-barik/PyConfigr/blob/main/CHANGELOG.md"
-License = "https://github.com/aditya-barik/PyConfigr/blob/main/LICENSE"
+Homepage = "https://github.com/aditya-barik/PyConfigre"
+Documentation = "https://github.com/aditya-barik/PyConfigre/blob/main/README.md"
+Repository = "https://github.com/aditya-barik/PyConfigre"
+Issues = "https://github.com/aditya-barik/PyConfigre/issues"
+Changelog = "https://github.com/aditya-barik/PyConfigre/blob/main/CHANGELOG.md"
+License = "https://github.com/aditya-barik/PyConfigre/blob/main/LICENSE"
 
 
 [tool.setuptools]
@@ -66,7 +66,7 @@ include = ["pyconfig*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
-pyconfigr = ["py.typed"]
+pyconfigre = ["py.typed"]
 
 # Ruff configuration
 [tool.ruff]
@@ -125,7 +125,7 @@ markers = [
 ]
 addopts = [
     "--strict-markers",
-    "--cov=src/pyconfigr",
+    "--cov=src/pyconfigre",
     "--cov-report=term-missing",
     "--cov-report=xml:.pytest/results/coverage.xml",
     "--cov-report=markdown-append:.pytest/results/coverage.md",
@@ -133,7 +133,7 @@ addopts = [
 
 # Coverage configuration
 [tool.coverage.run]
-source = ["src/pyconfigr"]
+source = ["src/pyconfigre"]
 branch = true
 omit = [
     "tests/*",

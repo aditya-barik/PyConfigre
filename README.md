@@ -1,17 +1,17 @@
-# 🚀 PyConfigr
+# 🚀 PyConfigre
 
 **Configuration management for Python applications.** Elegant, type-safe, and built for real-world needs.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![codecov](https://codecov.io/github/aditya-barik/PyConfigr/graph/badge.svg?token=II8VJY2FOM)](https://codecov.io/github/aditya-barik/PyConfigr)
+[![codecov](https://codecov.io/github/aditya-barik/PyConfigre/graph/badge.svg?token=II8VJY2FOM)](https://codecov.io/github/aditya-barik/PyConfigre)
 [![Type Safe](https://img.shields.io/badge/type%20safe-mypy-blue)](http://mypy-lang.org/)
 
-PyConfigr bridges the gap between manual configuration management and heavyweight tools. It combines **Pydantic's robust validation** with support for **multiple formats** (YAML, JSON, TOML), **environment variables**, and a **fluent API** that reads like natural Python. Whether you're building microservices, web applications, or CLI tools, PyConfigr handles configuration without getting in the way.
+PyConfigre bridges the gap between manual configuration management and heavyweight tools. It combines **Pydantic's robust validation** with support for **multiple formats** (YAML, JSON, TOML), **environment variables**, and a **fluent API** that reads like natural Python. Need the pipeline without a schema? PyConfigre has you covered with `RawConfigBuilder`. Whether you're building microservices, web applications, or CLI tools, PyConfigre handles configuration without getting in the way.
 
-## ✨ Why PyConfigr?
+## ✨ Why PyConfigre?
 
-**Configuration shouldn't be complicated.** Most tools either do too much or too little. PyConfigr fits the middle ground:
+**Configuration shouldn't be complicated.** Most tools either do too much or too little. PyConfigre fits the middle ground:
 
 - **For teams** who want type safety without sacrificing simplicity
 - **For projects** that need to merge configurations from multiple sources
@@ -25,6 +25,7 @@ PyConfigr bridges the gap between manual configuration management and heavyweigh
 - **⛓️ Fluent API**: Chainable methods that read naturally
 - **🎯 Format Auto-Detection**: Automatically identify and parse files
 - **🐍 Modern Python**: Full type hints and Python 3.10+ syntax
+- **   Schema-Free Option**: Use `RawConfigBuilder` when you just need a merged `dict` — no Pydantic required
 - **🪶 Lightweight**: Only `pydantic` and `pyyaml` required for core functionality
 
 ## 🚀 Getting Started
@@ -33,17 +34,20 @@ PyConfigr bridges the gap between manual configuration management and heavyweigh
 
 ```bash
 # Basic installation (JSON & YAML support)
-pip install pyconfigr
+pip install pyconfigre
 
 # Add TOML support
-pip install pyconfigr[toml]
+pip install pyconfigre[toml]
+
+# With uv support
+uv add pyconfigre
 ```
 
 ### 30-Second Example
 
 ```python
 from pydantic import BaseModel
-from pyconfigr import ConfigBuilder
+from pyconfigre import ConfigBuilder
 
 class AppConfig(BaseModel):
     """Your application configuration schema."""
@@ -66,6 +70,27 @@ print(f"Server: {config.host}:{config.port}")
 ```
 
 **That's it.** Three lines of configuration loading. Three sources merged intelligently. Full type safety throughout.
+
+### Schema-Free Alternative
+
+Don't need typed validation? Use `RawConfigBuilder` to get a plain dictionary:
+
+```python
+from pyconfigre import RawConfigBuilder
+
+raw_config = (
+    RawConfigBuilder()
+    .from-file("config.yaml")
+    .from_env("MYAPP_")
+    .set("debug", True)  # Explicit override
+    .build_dict()
+)
+
+# config is a plain dict — no schema needed
+print(f"Port: {raw_config['port']}")
+```
+
+Same pipeline, same priority system, same multi-format support — just without the Pydantic model.
 
 ## � Common Patterns
 
@@ -134,7 +159,32 @@ print(f"DB: {config.database.host}:{config.database.port}")
 print(f"Cache TTL: {config.cache.ttl_seconds}s")
 ```
 
-### Pattern 4: Validation with Constraints
+### Pattern 4: Schema-Free Configuration
+
+use `RawConfigBuilder` when you need the pipeline but not the validation — scripts, CLI tools, migrations, or quick prototypes:
+
+```python
+from pyconfigre import RawConfigBuilder
+
+# Full pipeline, plain dict output
+raw_config = (
+    RawConfigBuilder()
+    .from_file("config/default.yaml")
+    .from_env("MYAPP_")
+    .from_dict({"timeout": 30})
+    .build_dict()
+)
+
+# inspect mid-chain without finalising
+raw_builder = RawConfigBuilder().from_file("config.yaml")
+print(raw_builder.peek())  # snapshot of current state
+raw_builder.set("port", 9000)
+raw_config = raw_builder.build_dict()
+```
+
+`RawConfigBuilder` shares the exact same loading, merging, and priority logic as `ConfigBuilder` — it just skips the Pydantic validation step.
+
+### Pattern 5: Validation with Constraints
 
 Let Pydantic enforce your business rules:
 
@@ -153,7 +203,7 @@ config = ConfigBuilder(AppConfig).from_dict({"port": 99999}).build()  # ❌ Fail
 
 ## 🎯 Configuration Priority
 
-PyConfigr implements a simple, predictable priority system. Later sources override earlier ones:
+PyConfigre implements a simple, predictable priority system. Later sources override earlier ones:
 
 ```
 File → Environment Variables → Dictionary → Explicit .set() method
@@ -197,7 +247,7 @@ Here's a complete, production-like example:
 ```python
 from pydantic import BaseModel, Field
 from typing import Optional
-from pyconfigr import ConfigBuilder
+from pyconfigre import ConfigBuilder
 
 # Configuration schema
 class DatabaseConfig(BaseModel):
@@ -276,7 +326,7 @@ This approach gives you:
 ```python
 import pytest
 from pydantic import BaseModel, ValidationError
-from pyconfigr import ConfigBuilder
+from pyconfigre import ConfigBuilder
 
 class TestConfig(BaseModel):
     feature_enabled: bool = False
@@ -360,9 +410,9 @@ chmod 600 config/production.yaml
 
 | Aspect | Status |
 |--------|--------|
-| **Version** | 0.1.0 (Initial Release) |
+| **Version** | 0.2.0 |
 | **Python Support** | 3.10, 3.11, 3.12, 3.13, 3.14 |
-| **Test Coverage** | ~98% (105 tests) |
+| **Test Coverage** | ~100% (200 tests) |
 | **Type Checking** | Full MyPy strict compliance |
 | **CI/CD** | GitHub Actions (multi-version testing) |
 
@@ -389,6 +439,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Questions or feedback?** Open an issue on [GitHub](https://github.com/aditya-barik/PyConfigr/issues).
+**Questions or feedback?** Open an issue on [GitHub](https://github.com/aditya-barik/PyConfigre/issues).
 
 Built with ❤️ for teams who care about clean, maintainable, type-safe Python code.

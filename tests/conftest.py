@@ -1,4 +1,4 @@
-"""Shared test fixtures for PyConfigr test suite.
+"""Shared test fixtures for PyConfigre test suite.
 
 This module provides common pytest fixtures used across all test modules.
 """
@@ -40,7 +40,7 @@ def temp_dir() -> Generator[Path, None, None]:
 def yaml_config_file(temp_dir: Path) -> Path:
     """Create temporary YAML configuration file."""
     config_content = """
-app_name: test_application
+app_name: test_application_yaml
 debug: true
 port: 9000
 server:
@@ -56,7 +56,7 @@ server:
 def json_config_file(temp_dir: Path) -> Path:
     """Create temporary JSON configuration file."""
     config_content = """{
-  "app_name": "test_application",
+  "app_name": "test_application_json",
   "debug": true,
   "port": 9000,
   "server": {
@@ -73,7 +73,7 @@ def json_config_file(temp_dir: Path) -> Path:
 def toml_config_file(temp_dir: Path) -> Path:
     """Create temporary TOML configuration file."""
     config_content = """
-app_name = "test_application"
+app_name = "test_application_toml"
 debug = true
 port = 9000
 

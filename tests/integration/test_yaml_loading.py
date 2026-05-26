@@ -7,8 +7,8 @@ Covers flat configs, nested sections, all primitive types, both .yaml and
 
 import pytest
 
-from pyconfigr import ConfigBuilder
-from pyconfigr.exceptions import ConfigLoadError
+from pyconfigre import ConfigBuilder
+from pyconfigre.exceptions import ConfigLoadError
 
 from .conftest import AllTypesConfig, AppConfig, SimpleConfig
 

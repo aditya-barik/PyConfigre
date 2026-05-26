@@ -1,1 +1,1 @@
-"""Tests for PyConfigr loaders package."""
+"""Tests for PyConfigre loaders package."""

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-One-time git hook setup for PyConfigr.
+One-time git hook setup for PyConfigre.
 
 Run with:
     uv run python scripts/setup-hooks.py
