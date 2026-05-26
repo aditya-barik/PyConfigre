@@ -180,7 +180,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: build-artifacts
-          path: ./dist/*.whl
+          path: ./dist/
           retention-days: 30
 
   integration:
