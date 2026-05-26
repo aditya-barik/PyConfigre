@@ -11,6 +11,11 @@
 # Requires a `pypi` Github Environment with a matching Trusted Publisher
 # configured on pypi.org.
 #
+# PUBLISH_TARGET env var controls the target index:
+#   "pypi"     → publish to production PyPI
+#   "testpypi" → publish to TestPyPI
+# This single value drives environment, repository-url, and verify source.
+#
 # Job dependency chain:
 #   validate-tag → build → publish → verify
 #
@@ -25,7 +30,7 @@ on:
 
 env:
     UV_VERSION: "0.9.2"
-    PUBLISH_TARGET: "pypi"  # Set to "testpypi" to publish to https://test.pypi.org/
+    PUBLISH_TARGET: "testpypi"
 
 jobs:
   validate-tag:
