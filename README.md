@@ -410,7 +410,7 @@ chmod 600 config/production.yaml
 
 | Aspect | Status |
 |--------|--------|
-| **Version** | 0.2.0 |
+| **Version** | 0.2.0rc1 |
 | **Python Support** | 3.10, 3.11, 3.12, 3.13, 3.14 |
 | **Test Coverage** | ~100% (200 tests) |
 | **Type Checking** | Full MyPy strict compliance |
