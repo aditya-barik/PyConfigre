@@ -33,18 +33,20 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       is_semver: ${{ steps.check.outputs.is_semver }}
+      publish_target: ${{ steps.check.outputs.publish_target }}
     steps:
       - name: Check tag matches v*.*.* pattern
         id: check
         run: |
-          TAG="${{ github.event.release.tag_name}}"
+          TAG="${{ github.event.release.tag_name }}"
           echo "🔍 Validating release tag format..."
           if [[ "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)([a-zA-Z0-9]+)?$ ]]; then
-            echo "is_semver=true" >> $GITHUB_OUTPUT
-            echo "✅ Tag '$TAG' is valid semver — proceeding with publish."
+            echo "is_semver=true" >> "$GITHUB_OUTPUT"
+            echo "publish_target=${{ env.PUBLISH_TARGET }}" >> "$GITHUB_OUTPUT"
+            echo "✅ Tag '$TAG' is valid semver — proceeding with publish to ${{ env.PUBLISH_TARGET }}"
           else
-            echo "is_semver=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Tag '$TAG' does not match v*.*.* pattern — Skipping publish."
+            echo "is_semver=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Tag '$TAG' does not match v*.*.* pattern — skipping publish."
           fi
 
   build:
@@ -95,7 +97,7 @@ jobs:
     needs: [validate-tag, build]
     if: needs.validate-tag.outputs.is_semver == 'true'
     runs-on: ubuntu-latest
-    environment: ${{ env.PUBLISH_TARGET }}
+    environment: ${{ needs.validate-tag.outputs.publish_target }}
     permissions:
       id-token: write
     steps:
