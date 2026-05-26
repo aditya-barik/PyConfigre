@@ -5,12 +5,12 @@
 
 ## Release Timeline
 ```
-    ●               ●               ◌               ◌               ◌
-    │               │               │               │               │
-────●───────────────●───────────────◌───────────────◌───────────────◌────
-    │               │               │               │               │
-  v0.1.0          v0.1.1          v0.2.0          v0.3.0          v1.0.0
-  shipped         shipped         current         planned         target
+    ●               ●               ◌               ◌               ◌               ◌
+    │               │               │               │               │               │
+────●───────────────●───────────────◌───────────────◌───────────────◌───────────────◌────
+    │               │               │               │               │               │
+  v0.1.0          v0.1.1          v0.2.0          v0.3.0          v0.4.0          v1.0.0
+  shipped         shipped         current         planned         planned         target
   Feb 2026        Mar 2026
 ```
 
@@ -112,7 +112,7 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
 
 - `RawConfigBuilder` is the base — `ConfigBuilder` extends it
 - `_deep_merge` (module-level since v0.1.1) shared by both without coupling
-- Both classes in `builder.py` until v0.3.0 triggers folder conversion
+- Both classes in `builder.py` until v0.3.0 triggers folder conversion (three builder classes justify the package split)
 
 ### New public API
 
@@ -160,11 +160,115 @@ pyconfigre/
 - `test_config_builder_still_inherits_all_pipeline_methods`
 - `test_deep_merge_shared_between_both_classes`
 
-## v0.3.0 — New Pipeline Features 📋 Planned
+## v0.3.0 — DataClassConfigBuilder + Folder Conversion 📋 Planned
+
+**Goal:** Provide a lightweight typed configuration builder using Python's stdlib `dataclasses` — no Pydantic dependency required. Also converts `builder.py` into a `builder/` package now that three builder classes exist.
+
+**Problem:** `ConfigBuilder` requires Pydantic, which is heavy for simple projects. `RawConfigBuilder` returns a plain dict with no type safety — there is no middle ground for projects that want typed attribute access without a validation framework.
+
+### Architecture
+
+```python
+from dataclasses import dataclass, field
+
+@dataclass
+class DatabaseConfig:
+    host: str = "localhost"
+    port: int = 5432
+    name: str = "mydb"
+
+@dataclass
+class AppConfig:
+    app_name: str = "my_app"
+    debug: bool = False
+    port: int = 8080
+    database: DatabaseConfig = field(default_factory=DatabaseConfig)
+```
+
+```python
+class DataClassConfigBuilder(RawConfigBuilder, Generic[T]):
+    """Extends the pipeline with Python dataclass instantiation."""
+    def __init__(self, schema: type[T]) -> None: ...
+    def build() -> T: ...  # terminal — instantiates dataclass from merged dict
+    # inherits everything from RawConfigBuilder
+```
+
+### Three-tier builder hierarchy
+
+| Builder | Schema | Output | Dependency |
+|---------|--------|--------|------------|
+| `RawConfigBuilder` | None | `dict[str, Any]` | stdlib only |
+| `DataClassConfigBuilder` | `@dataclass` | dataclass instance | stdlib only |
+| `ConfigBuilder` | `BaseModel` | Pydantic model | `pydantic` |
+
+### New public API
+
+```python
+from pyconfigre import DataClassConfigBuilder
+
+dataclass_config = (
+    DataClassConfigBuilder(AppConfig)
+    .from_file("config.yaml")
+    .from_env("MYAPP_")
+    .set("debug", True)  # mid-chain override
+    .build()  # → AppConfig(app_name="my_app", debug=True, port=8080, database=DatabaseConfig(...))
+)
+
+# Attribute access — typed, IDE-friendly
+print(dataclass_config.database.host)  # "localhost"
+print(dataclass_config.port)           # 8080
+```
+
+### Type coercion strategy
+
+Basic coercion for common cases (config files often parse everything as strings):
+
+| Source type | Target type | Coercion logic |
+|-------------|-------------|----------------|
+| `str` | `int` | `int(value)` |
+| `str` | `float` | `float(value)` |
+| `str` | `bool` | `{"true", "1", "yes"}` → `True`, `{"false", "0", "no"}` → `False` |
+| `dict`| nasted `@dataclass` | recursive instantiation |
+| other | other | pass-through (let Python raise `TypeError`) |
+
+### Folder conversion
+
+Three builder classes justify converting `builder.py` into a `builder/` package:
+
+```
+pyconfigre/
+├── __init__.py               ← add DataClassConfigBuilder to __all__
+├── builder/
+│   ├── __init__.py           ← re-exports all three builders
+│   ├── raw_builder.py        ← RawConfigBuilder
+│   ├── dataclass_builder.py  ← DataClassConfigBuilder (new)
+│   ├── config_builder.py     ← ConfigBuilder
+│   └── _merge.py             ← _deep_merge (extracted)
+├── exceptions.py
+└── loaders/
+    └── ...                   ← unchanged
+```
+
+### Tests to add
+
+- `test_build_basic_dataclass` — flat dataclass with defaults
+- `test_build_nested_dataclass` — recursive nested dataclass instantiation
+- `test_build_with_file_source` — `from_file()` → dataclass
+- `test_build_with_env_source` — `from_env()` → dataclass
+- `test_build_with_multiple_sources_priority` — priority order preserved
+- `test_type_coercion_str_to_int` — string `"8080"` → int `8080`
+- `test_type_coercion_str_to_bool` — string `"true"` → bool `True`, string `"0"` → bool `False`
+- `test_missing_required_field_raises` — no default + not provided → Error
+- `test_extra_fields_ignored` — dict keys not in dataclass are dropped
+- `test_fluent_api_returns_self` — chaining works correctly
+- `test_inheritance_from_raw_builder` — `isinstance` check
+- `test_non_dataclass_raises` — passing non-dataclass type → `TypeError`
+
+## v0.4.0 — New Pipeline Features 📋 Planned
 
 **Goal:** Ship the features that make PyConfigre meaningfully differentiated from `pydantic-settings` and `dynaconf`.
 
-### Feature 3.1 — `from_env_layer()`
+### Feature 4.1 — `from_env_layer()`
 
 **Problem:** The base → {env} → local layering pattern is written manually in every real project. It should be a single method call.
 
@@ -214,7 +318,7 @@ def from_env_layer(
 
 **Tests to add:** 8 tests covering base file, env-specific file, missing files skipped, local override priority, env var respected, custom base name, custom extension, default env value.
 
-### Feature 3.2 — Schema Inference (`infer_schema()`)
+### Feature 4.2 — Schema Inference (`infer_schema()`)
 
 **Problem:** Writing a Pydantic model for a 50-key nested config file from scratch is the biggest adoption friction point for large existing projects.
 
@@ -242,7 +346,7 @@ print(schema_code)  # → valid Python with nested BaseModel classes
 8 tests covering flat dict, nested subclass creation, bool-before-int ordering, None → Optional, list element inference, valid Python output (exec assertion), custom name, write-to-file.
 
 
-### Feature 3.3 — Directory Loading (`from_directory()`)
+### Feature 4.3 — Directory Loading (`from_directory()`)
 
 **Problem:** Large projects organise configs as a folder of files. There is no way to load this structure into a single accessible namespace.
 
@@ -258,7 +362,7 @@ cfg["env"]["dev"]["host"] # subscript access
 
 **Tests to add:** 14+ tests covering all access patterns, missing root, non-directory path, unknown extensions (silent skip and explicit raise), `to_dict()` round-trip, read-only enforcement, `recursive=False`, hidden file skipping, and pipeline integration.
 
-**Feature 3.4 — Conditional Loading (`when=` parameter)**
+**Feature 4.4 — Conditional Loading (`when=` parameter)**
 
 **Problem:** Conditional source application today breaks the fluent chain with if blocks.
 
@@ -280,26 +384,27 @@ config = (
 
 **Tests to add:** 20+ tests covering all condition forms, all operators, `all`/`any` logic, error cases, helpers, and mixin integration.
 
-**File structure at v0.3.0 (folder conversion)**
+**File structure at v0.4.0 (folder conversion)**
 
 ```
 pyconfigre/
 ├── __init__.py
 ├── exceptions.py
-├── conditions.py           ← new in v0.3.0
-├── directory.py            ← new in v0.3.0
-├── builder/                ← converted from builder.py
-│   ├── __init__.py         ← re-exports ConfigBuilder, RawConfigBuilder
-│   ├── config_builder.py   ← ConfigBuilder
-│   ├── raw_builder.py      ← RawConfigBuilder
-│   └── _merge.py           ← _deep_merge (extracted at folder conversion)
+├── conditions.py             ← new in v0.4.0
+├── directory.py              ← new in v0.4.0
+├── builder/                  ← converted from builder.py
+│   ├── __init__.py           ← re-exports all three builders
+│   ├── raw_builder.py        ← RawConfigBuilder
+│   ├── dataclass_builder.py  ← DataClassConfigBuilder (added in v0.3.0)
+│   ├── config_builder.py     ← ConfigBuilder
+│   └── _merge.py             ← _deep_merge (extracted in v0.3.0)
 └── loaders/
-    └── ...                 ← unchanged
+    └── ...                   ← unchanged
 ```
 
 ## v1.0.0 — Advanced Features 📋 Target
 
-Features that complete the differentiator story. Planned after v0.3.0 is stable.
+Features that complete the differentiator story. Planned after v0.4.0 is stable.
 
 **Secret Backend Loaders** — `from_secrets("aws://...")`, `from_secrets("vault://...")`. New `AWSSecretsLoader` and `VaultLoader` registered via `ConfigLoader.register_loader()`. Optional extras: `pip install pyconfigre[aws]`, `pyconfigre[vault]` and other secret backends.
 
@@ -319,6 +424,6 @@ Milestones map directly to the release sequence above. Each issue is assigned to
 | Two-class split | `RawConfigBuilder` base + `ConfigBuilder` subclass | Clean inheritance, `_deep_merge` shared without coupling, honest `Generic[T]` |
 | List merge behaviour | Replace, not extend | Lists in configs are complete values, not partial sequences to append |
 | `_deep_merge` placement | Module-level in `builder.py` until folder conversion | Co-location is honest while only one consumer exists; extract to `_merge.py` at conversion |
-| Folder conversion timing | At v0.3.0, not before | Two classes at v0.2.0 do not justify the `__init__.py` overhead |
+| Folder conversion timing | At v0.3.0 (DataclassConfigBuilder) | Three builder classes justify the `builder/` package split |
 | `from_env_layer` extension default | `.yaml` | Most common format; configurable via parameter |
 | Integration test Python version | 3.10 only (minimum) | Packaging concern, not compatibility — unit tests cover all versions |
