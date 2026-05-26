@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `cache-dependency-glob` from `pyproject.toml` to `uv.lock`
 - **Added `.github/ISSUE_TEMPLATE/general.md`** — issue template for general issues
 - **Added `.github/PULL_REQUEST_TEMPLATE.md`** — pre-fills PR description with the standard structure used across all PRs in the project
+- **Added `pypi-publish.yml`** — automated PyPI publishing on GitHub release (`v*.*.*` tags only); uses OIDC Trusted Publishers (no API token); requires `pypi` GitHub Environment.
 
 ## [0.1.1] - 2026-03-26
 
