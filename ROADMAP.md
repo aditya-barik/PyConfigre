@@ -5,13 +5,13 @@
 
 ## Release Timeline
 ```
-    ●               ●               ◌               ◌               ◌               ◌
+    ●               ●               ●               ◌               ◌               ◌
     │               │               │               │               │               │
-────●───────────────●───────────────◌───────────────◌───────────────◌───────────────◌────
+────●───────────────●───────────────●───────────────◌───────────────◌───────────────◌────
     │               │               │               │               │               │
   v0.1.0          v0.1.1          v0.2.0          v0.3.0          v0.4.0          v1.0.0
-  shipped         shipped         current         planned         planned         target
-  Feb 2026        Mar 2026
+  shipped         shipped         shipped         planned         planned         target
+  Feb 2026        Mar 2026        May 2026
 ```
 
 **Legend:** `●` shipped · `◌` planned · `current` = active development
@@ -80,7 +80,7 @@ Modernised the CI pipeline to use uv to its full potential, enforced branch and 
 
 Blocks PRs at the CI level if they are missing a linked issue or use a non-standard branch name. Reads branch prefixes directly from `.github/config/pr-labeling.json`. A local git hook (`.githooks/commit-msg`) catches branch naming issues before they reach GitHub.
 
-## v0.2.0 — RawConfigBuilder + build_dict() 🔄 Current
+## v0.2.0 — RawConfigBuilder + build_dict() (Shipped & Released on PyPI) ✅
 
 **Goal:** Make the full configuration pipeline available without requiring a Pydantic schema.
 
