@@ -1,7 +1,7 @@
 """
 Use case: merging configuration from multiple sources.
 
-This is the defining feature of PyConfigr. These tests verify that the
+This is the defining feature of PyConfigre. These tests verify that the
 priority order (from_file → from_env → from_dict → set) is applied
 correctly across all combinations, including deep nested merges, list
 replacement, and mid-chain inspection with peek().
@@ -12,7 +12,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from pyconfigr import ConfigBuilder
+from pyconfigre import ConfigBuilder
 
 from .conftest import AppConfig, SimpleConfig
 

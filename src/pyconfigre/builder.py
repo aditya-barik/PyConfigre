@@ -46,7 +46,7 @@ class RawConfigBuilder:
     --------
     Schmea-less usage::
 
-        from pyconfigr import RawConfigBuilder
+        from pyconfigre import RawConfigBuilder
 
         raw_config = (
             RawConfigBuilder()
@@ -80,7 +80,7 @@ class RawConfigBuilder:
 
         Supported extensions: ``.yaml``, ``.yml``, ``.json``, ``.toml``
         (and any extension registered via
-        :meth:`~pyconfigr.loaders.ConfigLoader.register_loader`).
+        :meth:`~pyconfigre.loaders.ConfigLoader.register_loader`).
 
         Parameters
         ----------
@@ -88,7 +88,7 @@ class RawConfigBuilder:
             Path to the configuration file.
         optional : bool, optional
             When ``True``, a missing file is silently ignored instead of
-            raising :exc:`~pyconfigr.exceptions.ConfigNotFoundError`.
+            raising :exc:`~pyconfigre.exceptions.ConfigNotFoundError`.
             Default is ``False``.
 
         Returns
@@ -395,7 +395,7 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
     Basic usage::
 
         from pydantic import BaseModel
-        from pyconfigr import ConfigBuilder
+        from pyconfigre import ConfigBuilder
 
         class AppConfig(BaseModel):
             debug: bool = False

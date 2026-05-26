@@ -6,8 +6,8 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-from pyconfigr.exceptions import ConfigLoadError
-from pyconfigr.loaders import ConfigLoader, YAMLLoader
+from pyconfigre.exceptions import ConfigLoadError
+from pyconfigre.loaders import ConfigLoader, YAMLLoader
 
 
 class TestYAMLLoader:

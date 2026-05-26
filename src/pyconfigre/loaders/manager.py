@@ -15,7 +15,7 @@ class ConfigLoader:
     Supports dynamic loader registration for maximum extensibility.
 
     The registries are class-level state populated at import time by
-    ``pyconfigr/loaders/__init__.py``.  Call :meth:`reset` in tests that
+    ``pyconfigre/loaders/__init__.py``.  Call :meth:`reset` in tests that
     register custom loaders to avoid cross-test pollution.
 
     Examples
@@ -238,7 +238,7 @@ class ConfigLoader:
         ------
         RuntimeError
             If called before the built-in loaders have been registered (i.e.
-            before ``pyconfigr`` has been imported at least once).
+            before ``pyconfigre`` has been imported at least once).
 
         Examples
         --------
@@ -250,7 +250,7 @@ class ConfigLoader:
         if cls._builtin_snapshot is None:
             raise RuntimeError(
                 "ConfigLoader.reset() called before built-in loaders were "
-                "registered.  Import 'pyconfigr' at least once first."
+                "registered.  Import 'pyconfigre' at least once first."
             )
         cls._extension_registry = copy.copy(cls._builtin_snapshot["extensions"])
         cls._loader_registry = copy.copy(cls._builtin_snapshot["loaders"])

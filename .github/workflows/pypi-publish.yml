@@ -1,0 +1,161 @@
+# —————————————————————————————————————————————————————————————————————————————
+# Publish to PyPI
+#
+# Triggered when a GitHub Release is published. A validation job checks
+# that the release tag matches the strict semver pattern v*.*.*
+# (e.g. v0.2.0, v1.0.0). Non-semver tags are silently ignored.
+#
+# Builds the sdist and wheel with uv, then publishes to PyPI using
+# OIDC Trusted Publishers (no API token required).
+#
+# Requires a `pypi` Github Environment with a matching Trusted Publisher
+# configured on pypi.org.
+#
+# PUBLISH_TARGET env var controls the target index:
+#   "pypi"     → publish to production PyPI
+#   "testpypi" → publish to TestPyPI
+# This single value drives environment, repository-url, and verify source.
+#
+# Job dependency chain:
+#   validate-tag → build → publish → verify
+#
+# Triggered by: release published (v*.*.* tags only)
+# —————————————————————————————————————————————————————————————————————————————
+
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+env:
+    UV_VERSION: "0.9.2"
+    PUBLISH_TARGET: "testpypi"
+
+jobs:
+  validate-tag:
+    name: Validate Release Tag
+    runs-on: ubuntu-latest
+    outputs:
+      is_semver: ${{ steps.check.outputs.is_semver }}
+      publish_target: ${{ steps.check.outputs.publish_target }}
+    steps:
+      - name: Check tag matches v*.*.* pattern
+        id: check
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          echo "🔍 Validating release tag format..."
+          if [[ "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)([a-zA-Z0-9]+)?$ ]]; then
+            echo "is_semver=true" >> "$GITHUB_OUTPUT"
+            echo "publish_target=${{ env.PUBLISH_TARGET }}" >> "$GITHUB_OUTPUT"
+            echo "✅ Tag '$TAG' is valid semver — proceeding with publish to ${{ env.PUBLISH_TARGET }}"
+          else
+            echo "is_semver=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Tag '$TAG' does not match v*.*.* pattern — skipping publish."
+          fi
+
+  build:
+    name: Build Distribution
+    needs: validate-tag
+    if: needs.validate-tag.outputs.is_semver == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Build the package
+        run: |
+          echo "📦 Building distribution package..."
+          uv build
+
+      - name: Verify built artifacts
+        run: |
+          echo "🔍 Verifying built artifacts..."
+          ls -lh dist/
+          echo ""
+          echo "Expected: one .tar.gz (sdist) and one .whl (wheel) file."
+          test $(ls dist/*.tar.gz 2>/dev/null | wc -l) -eq 1 || { echo "❌ Missing sdist"; exit 1; }
+          test $(ls dist/*.whl 2>/dev/null | wc -l) -eq 1 || { echo "❌ Missing wheel"; exit 1; }
+          echo "✅ Both artifacts are present."
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: dist
+          path: ./dist/
+          retention-days: 30
+
+  publish:
+    name: Publish to PyPI
+    needs: [validate-tag, build]
+    if: needs.validate-tag.outputs.is_semver == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ needs.validate-tag.outputs.publish_target }}
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: ${{ env.PUBLISH_TARGET == 'testpypi' && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}
+
+  verify:
+    name: Verify Published Package
+    needs: [validate-tag, publish]
+    if: needs.validate-tag.outputs.is_semver == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for package index to update
+        run: |
+          echo "⏳ Waiting 120 seconds for package index to update..."
+          sleep 120
+
+      - name: Install from package index
+        run: |
+          if [ "${{ env.PUBLISH_TARGET }}" = "testpypi" ]; then
+            echo "📦 Installing from TestPyPI..."
+            pip install -i https://test.pypi.org/simple/ \
+              --extra-index-url https://pypi.org/simple/ \
+              pyconfigre==${{ steps.version.outputs.version }}
+          else
+            echo "📦 Installing from PyPI..."
+            pip install pyconfigre==${{ steps.version.outputs.version }}
+          fi
+
+      - name: Verify package
+        run: |
+          python -c "
+          import pyconfigre
+          assert pyconfigre.__version__ == '${{ steps.version.outputs.version }}', \
+              f'Version mismatch: {pyconfigre.__version__} != ${{ steps.version.outputs.version }}'
+          print('✅ All imports and version check passed')
+          "

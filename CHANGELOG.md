@@ -16,12 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`ConfigBuilder` now extends `RawConfigBuilder`** (`builder.py`) — Two-class split: `RawConfigBuilder` is the base class with all pipeline logic; `ConfigBuilder(RawConfigBuilder, Generic[T])` adds typed Pydantic validation via `build()`. All existing `ConfigBuilder` usage is fully backwards-compatible.
 - **Fluent method return types use `Self`** (`builder.py`) — Pipeline methods now return `typing_extensions.Self` instead of a string-literal fprward reference. This gives correct return types through inheritance: calling `.from_file()` on a `ConfigBuilder[AppConfig]` returns `ConfigBuilder[AppConfig]`, not `RawConfigBuilder`.
-- **`RawConfigBuilder` added to public API** (`__init__.py`) — importable via `from pyconfigr import RawConfigBuilder` and included in `__all__`.
+- **`RawConfigBuilder` added to public API** (`__init__.py`) — importable via `from pyconfigre import RawConfigBuilder` and included in `__all__`.
 - **Version bumped to `0.2.0`** (`pyproject.toml`)
 
 ### 🧪 Tests
 
-- Expanded `tests/unit/test_builder.py` — 57 tests total mirroring `src/pyconfigr/builder.py`: 39 tests covering `RawConfigBuilder` (parent) pipeline, exception handling and inheritance; 18 tests for `ConfigBuilder` (child) smoke tests with `build()`, Pydantic validation, integration, and the shared `_deep_merge` utility.
+- Expanded `tests/unit/test_builder.py` — 57 tests total mirroring `src/pyconfigre/builder.py`: 39 tests covering `RawConfigBuilder` (parent) pipeline, exception handling and inheritance; 18 tests for `ConfigBuilder` (child) smoke tests with `build()`, Pydantic validation, integration, and the shared `_deep_merge` utility.
 
 ### 🤖 CI/CD
 
@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `cache-dependency-glob` from `pyproject.toml` to `uv.lock`
 - **Added `.github/ISSUE_TEMPLATE/general.md`** — issue template for general issues
 - **Added `.github/PULL_REQUEST_TEMPLATE.md`** — pre-fills PR description with the standard structure used across all PRs in the project
+- **Added `pypi-publish.yml`** — automated PyPI publishing on GitHub release (`v*.*.*` tags only); uses OIDC Trusted Publishers (no API token); requires `pypi` GitHub Environment.
 
 ## [0.1.1] - 2026-03-26
 
@@ -79,8 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`from_env()` keyword-only parameters** (`builder.py`) — `lowercase`, `strip_prefix`, and `nested` are now keyword-only. *Migration: `from_env("P", True, False)` → `from_env("P", lowercase=True, strip_prefix=False)`.*
 - **`get_raw_data()` emits `DeprecationWarning`** (`builder.py`) — Now warns on every call with `stacklevel=2`. Use `peek()` instead.
 - **`list_loaders()` and `list_extensions()` return sorted results** (`loaders/manager.py`) — Deterministic output regardless of registration order.
-- **`pyproject.toml` coverage config** — Now `--cov` targets to `src/pyconfigr` instead of bare `pyconfigr`;
-- **`pyproject.toml` coverage config** — `*/__init__.py` now removed from `coverage.run.omit` which was hiding real code in `src/pyconfigr/__init__.py` from the report  and `tests/*` added to `coverage.run.omit` to exclude test code from coverage report.
+- **`pyproject.toml` coverage config** — Now `--cov` targets to `src/pyconfigre` instead of bare `pyconfigre`;
+- **`pyproject.toml` coverage config** — `*/__init__.py` now removed from `coverage.run.omit` which was hiding real code in `src/pyconfigre/__init__.py` from the report  and `tests/*` added to `coverage.run.omit` to exclude test code from coverage report.
 
 ### 🤖 CI/CD
 
@@ -107,7 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🎉 Initial Release
 
-PyConfigr is a lightweight, type-safe configuration management library designed for modern Python applications. This initial release brings together multiple years of configuration management best practices into a simple, elegant API.
+PyConfigre is a lightweight, type-safe configuration management library designed for modern Python applications. This initial release brings together multiple years of configuration management best practices into a simple, elegant API.
 
 ### ✨ Core Features Added
 
@@ -202,11 +203,11 @@ PyConfigr is a lightweight, type-safe configuration management library designed 
 ### 🏗️ Project Structure
 
 ```
-PyConfigr/
+PyConfigre/
 ├── .github/                      # GitHub configuration
 │   └── workflows/                # CI/CD workflows
 ├── scripts/                      # Integration test scripts
-├── src/pyconfigr/                # Main package
+├── src/pyconfigre/                # Main package
 │   ├── __init__.py               # Public API exports
 │   ├── builder.py                # ConfigBuilder[T] class
 │   ├── exceptions.py             # Custom exceptions
@@ -230,7 +231,7 @@ PyConfigr/
 
 ### 🧠 Design Philosophy
 
-PyConfigr is built on several key principles:
+PyConfigre is built on several key principles:
 
 1. **Simplicity over magic** – Explicit configuration loading beats implicit auto-discovery
 2. **Type safety first** – Full type hints enable IDE support and catch errors early
@@ -241,7 +242,7 @@ PyConfigr is built on several key principles:
 
 ### 🔄 Configuration Priority
 
-PyConfigr implements a simple, intuitive configuration priority system:
+PyConfigre implements a simple, intuitive configuration priority system:
 
 ```
 File → Environment Variables → Dict → Explicit .set() method
@@ -292,14 +293,14 @@ Special thanks to:
 ## Comparison with Other Tools
 
 If you're currently using alternative tools:
-- **python-dotenv + manual merging** - PyConfigr provides cleaner API and type safety
-- **configparser** - PyConfigr supports multiple formats with validation
-- **hydra** - PyConfigr is simpler for most application needs
-- **dynaconf** - PyConfigr has zero-configuration setup, no need for environment prefixes
+- **python-dotenv + manual merging** - PyConfigre provides cleaner API and type safety
+- **configparser** - PyConfigre supports multiple formats with validation
+- **hydra** - PyConfigre is simpler for most application needs
+- **dynaconf** - PyConfigre has zero-configuration setup, no need for environment prefixes
 
 Each has different strengths. Choose based on your project's specific needs.
 
 ---
 
-[0.1.1]: https://github.com/aditya-barik/PyConfigr/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/aditya-barik/PyConfigr/releases/tag/v0.1.0
+[0.1.1]: https://github.com/aditya-barik/PyConfigre/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/aditya-barik/PyConfigre/releases/tag/v0.1.0

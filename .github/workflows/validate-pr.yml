@@ -5,7 +5,8 @@
 #
 #   1. Linked issue   — PR body must contain Closes/Fixes/Resolves #N.
 #                       Required for pr-lifecycle.yml label and milestone
-#                       sync to function correctly.
+#                       sync to function correctly. PRs from `dev` and
+#                       `release/` (deployment prep) branches are exempt.
 #
 #   2. Branch name    — Head branch must start with a recognised prefix
 #                       from .github/config/pr-labeling.json. Release PRs
@@ -49,10 +50,10 @@ jobs:
           script: |
             const branch = context.payload.pull_request.head.ref;
 
-            // Release/integration PRs from dev are exempt from the issue
-            // link check — they represent collected work, not a single issue
-            if (branch === 'dev') {
-              console.log('⏭️  Integration PR from dev — issue link check skipped.');
+            // Release/integration PRs from dev and release/ are exempt from the issue
+            // link check — they represent collected work or deployment prep
+            if (branch === 'dev' || branch.startsWith('release/')) {
+              console.log('⏭️  Integration/Release PR — issue link check skipped.');
               core.setOutput('failed', 'false');
               return;
             }

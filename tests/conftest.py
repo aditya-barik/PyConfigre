@@ -1,4 +1,4 @@
-"""Shared test fixtures for PyConfigr test suite.
+"""Shared test fixtures for PyConfigre test suite.
 
 This module provides common pytest fixtures used across all test modules.
 """

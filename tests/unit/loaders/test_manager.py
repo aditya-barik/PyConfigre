@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pyconfigr.loaders import BaseLoader, ConfigLoader
+from pyconfigre.loaders import BaseLoader, ConfigLoader
 
 
 class TestConfigLoader:
@@ -197,7 +197,7 @@ class TestConfigLoaderErrorHandling:
         """Test that reset() removes a loader registered after import.
 
         After reset(), the custom loader type must not appear in
-        :meth:`~pyconfigr.loaders.ConfigLoader.list_loaders`.
+        :meth:`~pyconfigre.loaders.ConfigLoader.list_loaders`.
         """
 
         class TempLoader(BaseLoader):
@@ -215,7 +215,7 @@ class TestConfigLoaderErrorHandling:
         """Test that reset() removes extensions registered after import.
 
         After reset(), the custom extension must not appear in
-        :meth:`~pyconfigr.loaders.ConfigLoader.list_extensions`.
+        :meth:`~pyconfigre.loaders.ConfigLoader.list_extensions`.
         """
 
         class TempLoader(BaseLoader):
@@ -264,8 +264,8 @@ class TestConfigLoaderErrorHandling:
         has not been taken yet.
 
         This guards the edge case where someone imports ``ConfigLoader``
-        directly from ``pyconfigr.loaders.manager`` without going through
-        the ``pyconfigr`` package, which is the only path that calls
+        directly from ``pyconfigre.loaders.manager`` without going through
+        the ``pyconfigre`` package, which is the only path that calls
         ``_save_builtin_snapshot()``.
 
         The test temporarily nulls the snapshot and must restore it in
@@ -274,7 +274,7 @@ class TestConfigLoaderErrorHandling:
         original = ConfigLoader._builtin_snapshot
         try:
             ConfigLoader._builtin_snapshot = None
-            with pytest.raises(RuntimeError, match="Import 'pyconfigr' at least once"):
+            with pytest.raises(RuntimeError, match="Import 'pyconfigre' at least once"):
                 ConfigLoader.reset()
         finally:
             ConfigLoader._builtin_snapshot = original

@@ -2,7 +2,7 @@
 
 import os
 
-from pyconfigr.loaders import ENVLoader
+from pyconfigre.loaders import ENVLoader
 
 
 class TestENVLoader:
@@ -38,16 +38,16 @@ class TestENVLoader:
         Verifies that environment variables can be loaded without
         requiring a specific prefix.
         """
-        os.environ["PYCONFIGR_TEST_VAR"] = "test_value"
+        os.environ["PYCONFIGRE_TEST_VAR"] = "test_value"
 
         try:
             loader = ENVLoader()
             config = loader()
 
-            assert "pyconfigr_test_var" in config
-            assert config["pyconfigr_test_var"] == "test_value"
+            assert "pyconfigre_test_var" in config
+            assert config["pyconfigre_test_var"] == "test_value"
         finally:
-            del os.environ["PYCONFIGR_TEST_VAR"]
+            del os.environ["PYCONFIGRE_TEST_VAR"]
 
     def test_env_no_strip_prefix(self) -> None:
         """Test keeping prefix in keys.

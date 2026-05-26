@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from pyconfigr.exceptions import ConfigLoadError
-from pyconfigr.loaders import JSONLoader
+from pyconfigre.exceptions import ConfigLoadError
+from pyconfigre.loaders import JSONLoader
 
 
 class TestJSONLoader:

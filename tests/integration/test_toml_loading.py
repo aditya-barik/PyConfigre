@@ -8,8 +8,8 @@ handling. TOML is the standard configuration format for Python tooling
 
 import pytest
 
-from pyconfigr import ConfigBuilder
-from pyconfigr.exceptions import ConfigLoadError
+from pyconfigre import ConfigBuilder
+from pyconfigre.exceptions import ConfigLoadError
 
 from .conftest import AllTypesConfig, AppConfig, SimpleConfig
 
