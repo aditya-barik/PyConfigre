@@ -55,7 +55,7 @@ Inspect assembled data before validating::
 
 from importlib.metadata import PackageNotFoundError, version
 
-from .builder import ConfigBuilder, RawConfigBuilder
+from .builder import ConfigBuilder, DataClassConfigBuilder, RawConfigBuilder
 from .exceptions import (
     ConfigError,
     ConfigLoadError,
@@ -70,6 +70,7 @@ except PackageNotFoundError:  # pragma: no cover
 
 __all__ = [
     "ConfigBuilder",
+    "DataClassConfigBuilder",
     "RawConfigBuilder",
     "ConfigError",
     "ConfigLoadError",
