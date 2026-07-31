@@ -1,30 +1,19 @@
 """
-Fluent API builders for configuration management.
+Schema-free configuration pipeline.
 
-This module provides two public classes:
-
-- :class:`RawConfigBuilder` — the pure pipeline (loading, merging, priority).
-  No schema required.  Terminal method: :meth:`~RawConfigBuilder.build_dict`.
-- :class:`ConfigBuilder` — extends :class:`RawConfigBuilder` with typed Pydantic
-  validation.  Terminal method: :meth:`~ConfigBuilder.build`.
+Provides :class:`RawConfigBuilder` — the base builder with loading, merging,
+and priority logic.  No schema or validation framework is required.
 """
 
 import warnings
 from pathlib import Path
-from typing import Any, Generic, TypeVar
+from typing import Any
 
-from pydantic import BaseModel, ValidationError
 from typing_extensions import Self
 
-from .exceptions import ConfigLoadError, ConfigNotFoundError, ConfigValidationError
-from .loaders import ConfigLoader
-
-T = TypeVar("T", bound=BaseModel)
-
-
-# ======================================================================
-# RawConfigBuilder — schema-free pipeline
-# ======================================================================
+from ..exceptions import ConfigLoadError, ConfigNotFoundError
+from ..loaders import ConfigLoader
+from ._merge import _deep_merge
 
 
 class RawConfigBuilder:
@@ -373,129 +362,3 @@ class RawConfigBuilder:
     def _merge(self, new_data: dict[str, Any]) -> None:
         """Deep-merge *new_data* into the current state. Later wins."""
         _deep_merge(self._data, new_data)
-
-
-class ConfigBuilder(RawConfigBuilder, Generic[T]):
-    """
-    Fluent API builder for loading, merging, and validating configuration.
-
-    Extends :class:`RawConfigBuilder` with typed Pydantic validation.
-    All pipeline methods (:meth:`from_file`, :meth:`from_env`,
-    :meth:`from_dict`, :meth:`set`, :meth:`peek`) are inherited.  Use
-    :meth:`build` to validate and return a typed Pydantic model instance.
-
-    Parameters
-    ----------
-    config_class : type[T]
-        Pydantic ``BaseModel`` subclass used to validate the final
-        assembled configuration when :meth:`build` is called.
-
-    Examples
-    --------
-    Basic usage::
-
-        from pydantic import BaseModel
-        from pyconfigre import ConfigBuilder
-
-        class AppConfig(BaseModel):
-            debug: bool = False
-            port: int = 8000
-
-        config = (
-            ConfigBuilder(AppConfig)
-            .from_file("config.yaml")
-            .from_env("MYAPP_")
-            .build()
-        )
-
-    Multiple sources with explicit priority::
-
-        config = (
-            ConfigBuilder(AppConfig)
-            .from_file("base.yaml")          # lowest priority
-            .from_file("overrides.json", optional=True)
-            .from_env("MYAPP_")
-            .from_dict({"debug": True})      # highest priority
-            .build()
-        )
-    """
-
-    def __init__(self, config_class: type[T]) -> None:
-        """
-        Initialise the builder with a Pydantic schema class.
-
-        Parameters
-        ----------
-        config_class : type[T]
-            Pydantic ``BaseModel`` subclass used to validate the assembled
-            configuration when :meth:`build` is called.  Stored internally
-            as the private attribute ``_config_class``.
-        """
-        self._config_class = config_class
-        self._data: dict[str, Any] = {}
-
-    # ------------------------------------------------------------------
-    # Terminal method
-    # ------------------------------------------------------------------
-
-    def build(self) -> T:
-        """
-        Validate and return the assembled configuration object.
-
-        Returns
-        -------
-        T
-            An instance of the schema class passed to :meth:`__init__`,
-            populated with the assembled data and validated by Pydantic.
-
-        Raises
-        ------
-        ConfigValidationError
-            If the assembled data fails Pydantic validation.
-
-        Examples
-        --------
-        ::
-
-            config = ConfigBuilder(AppConfig).from_file("app.yaml").build()
-            print(config.port)
-        """
-        try:
-            return self._config_class.model_validate(self._data)
-        except ValidationError as e:
-            raise ConfigValidationError(
-                f"Configuration validation failed for "
-                f"'{self._config_class.__name__}': {e}"
-            ) from e
-
-
-# ------------------------------------------------------------------
-# Module-level merge helper (shared by RawConfigBuilder and ConfigBuilder)
-# ------------------------------------------------------------------
-
-
-def _deep_merge(target: dict[str, Any], source: dict[str, Any]) -> None:
-    """
-    Recursively merge *source* into *target* in-place.
-
-    Rules
-    -----
-    - ``dict`` + ``dict``  →  recursively merged (target keys not in source
-      are preserved).
-    - anything else        →  source value replaces target value entirely.
-    - **Lists are replaced**, not extended.  This is intentional: a list
-      in a config file represents a complete value (e.g. ``allowed_hosts``),
-      not a partial one to be appended to.
-
-    Parameters
-    ----------
-    target : dict[str, Any]
-        Dictionary modified in-place.
-    source : dict[str, Any]
-        Dictionary whose values take priority.
-    """
-    for key, value in source.items():
-        if key in target and isinstance(target[key], dict) and isinstance(value, dict):
-            _deep_merge(target[key], value)
-        else:
-            target[key] = value
