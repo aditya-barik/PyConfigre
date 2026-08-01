@@ -7,25 +7,11 @@ exercising the get_raw_data() deprecation path. They verify that the API
 is composable, non-destructive, and gives clear errors when misused.
 """
 
-import os
-from contextlib import contextmanager
-
 import pytest
 
 from pyconfigre import ConfigBuilder
 
-from .conftest import AppConfig, SimpleConfig
-
-
-@contextmanager
-def _env(**kwargs):
-    for k, v in kwargs.items():
-        os.environ[k] = v
-    try:
-        yield
-    finally:
-        for k in kwargs:
-            os.environ.pop(k, None)
+from .conftest import AppConfig, SimpleConfig, env_vars
 
 
 @pytest.mark.integration
@@ -37,7 +23,7 @@ class TestFluentAPI:
         f = cfg_dir / "app.yaml"
         f.write_text("name: from-file\nport: 8000\n")
 
-        with _env(CHAIN_DEBUG="true"):
+        with env_vars(CHAIN_DEBUG="true"):
             config = (
                 ConfigBuilder(SimpleConfig)
                 .from_file(f)
