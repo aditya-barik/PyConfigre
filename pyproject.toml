@@ -127,6 +127,7 @@ addopts = [
     "--strict-markers",
     "--cov=src/pyconfigre",
     "--cov-report=term-missing",
+    "--cov-fail-under=80",
     "--cov-report=xml:.pytest/results/coverage.xml",
     "--cov-report=markdown-append:.pytest/results/coverage.md",
 ]

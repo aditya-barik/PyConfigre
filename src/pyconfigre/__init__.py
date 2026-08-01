@@ -55,7 +55,7 @@ Inspect assembled data before validating::
 
 from importlib.metadata import PackageNotFoundError, version
 
-from .builder import ConfigBuilder, RawConfigBuilder
+from .builder import ConfigBuilder, DataClassConfigBuilder, RawConfigBuilder
 from .exceptions import (
     ConfigError,
     ConfigLoadError,
@@ -66,10 +66,11 @@ from .exceptions import (
 try:
     __version__ = version("pyconfigre")
 except PackageNotFoundError:  # pragma: no cover
-    __version__ = "0.2.0"
+    __version__ = "0.3.0.dev"
 
 __all__ = [
     "ConfigBuilder",
+    "DataClassConfigBuilder",
     "RawConfigBuilder",
     "ConfigError",
     "ConfigLoadError",
