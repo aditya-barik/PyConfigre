@@ -1,5 +1,5 @@
 """
-Shared fixtures and Pydantic schemas for the integration test suite.
+Shared fixtures and Pydantic / dataclass schemas for the integration test suite.
 
 All integration tests operate against realistic schemas that represent
 actual application configuration — not minimal stubs.
@@ -7,6 +7,7 @@ actual application configuration — not minimal stubs.
 
 import os
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -75,6 +76,39 @@ class SimpleConfig(BaseModel):
     debug: bool = False
     port: int = 8000
     api_key: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Dataclass schemas — reused across integration test files
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class SimpleConfigDC:
+    """Minimal schema for dataclass integration tests."""
+
+    name: str = "default"
+    debug: bool = False
+    port: int = 8000
+    api_key: str | None = None
+
+
+@dataclass
+class DatabaseConfigDC:
+    """Relational database configuration for dataclass integration tests."""
+
+    name: str
+    username: str
+    password: str
+    host: str = "localhost"
+    port: int = 5432
+
+
+@dataclass
+class ComplexConfigDC:
+    """Schema with a non-coercible concrete type for pass-through tests."""
+
+    value: complex = 0j
 
 
 # ---------------------------------------------------------------------------
