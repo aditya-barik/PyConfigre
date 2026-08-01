@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/github/aditya-barik/PyConfigre/graph/badge.svg?token=II8VJY2FOM)](https://codecov.io/github/aditya-barik/PyConfigre)
 [![Type Safe](https://img.shields.io/badge/type%20safe-mypy-blue)](http://mypy-lang.org/)
 
-PyConfigre bridges the gap between manual configuration management and heavyweight tools. It combines **Pydantic's robust validation** with support for **multiple formats** (YAML, JSON, TOML), **environment variables**, and a **fluent API** that reads like natural Python. Need the pipeline without a schema? PyConfigre has you covered with `RawConfigBuilder`. Whether you're building microservices, web applications, or CLI tools, PyConfigre handles configuration without getting in the way.
+PyConfigre bridges the gap between manual configuration management and heavyweight tools. It combines **Pydantic's robust validation** with support for **multiple formats** (YAML, JSON, TOML), **environment variables**, and a **fluent API** that reads like natural Python. Need the pipeline without a schema? Use `RawConfigBuilder`. Want typed attribute access without Pydantic? Use `DataClassConfigBuilder` with stdlib `dataclasses`. Whether you're building microservices, web applications, or CLI tools, PyConfigre handles configuration without getting in the way.
 
 ## ✨ Why PyConfigre?
 
@@ -26,6 +26,7 @@ PyConfigre bridges the gap between manual configuration management and heavyweig
 - **🎯 Format Auto-Detection**: Automatically identify and parse files
 - **🐍 Modern Python**: Full type hints and Python 3.10+ syntax
 - **   Schema-Free Option**: Use `RawConfigBuilder` when you just need a merged `dict` — no Pydantic required
+- **🏗️ Dataclass Support**: Use `DataClassConfigBuilder` for typed access with stdlib `dataclasses` — no Pydantic needed
 - **🪶 Lightweight**: Only `pydantic` and `pyyaml` required for core functionality
 
 ## 🚀 Getting Started
@@ -49,12 +50,15 @@ uv add pyconfigre
 from pydantic import BaseModel
 from pyconfigre import ConfigBuilder
 
+
 class AppConfig(BaseModel):
     """Your application configuration schema."""
+
     debug: bool = False
     port: int = 8000
     host: str = "0.0.0.0"
     database_url: str
+
 
 # Load from file → environment → runtime overrides
 config = (
@@ -91,6 +95,54 @@ print(f"Port: {raw_config['port']}")
 ```
 
 Same pipeline, same priority system, same multi-format support — just without the Pydantic model.
+
+### Dataclass Builder — Typed Access Without Pydantic
+
+Want typed attribute access but don't want the Pydantic dependency? Use `DataClassConfigBuilder` with stdlib `dataclasses`:
+
+```python
+from dataclasses import dataclass, field
+from pyconfigre import DataClassConfigBuilder
+
+
+@dataclass
+class DatabaseConfig:
+    host: str = "localhost"
+    port: int = 5432
+
+
+@dataclass
+class AppConfig:
+    app_name: str = "my_app"
+    debug: bool = False
+    port: int = 8080
+    database: DatabaseConfig = field(default_factory=DatabaseConfig)
+
+
+config = (
+    DataClassConfigBuilder(AppConfig)
+    .from_file("config.yaml")
+    .from_env("MYAPP_")
+    .set("debug", True)
+    .build()
+)
+
+# Typed attribute access — IDE-friendly, no Pydantic needed
+print(config.database.host)  # "localhost"
+print(config.port)  # 8080
+```
+
+Built-in type coercion handles common cases: `"8080"` → `int`, `"true"` → `bool`, nested dicts → nested dataclass instances.
+
+### Three-Tier Builder Hierarchy
+
+| Builder | Schema | Output | Dependency |
+|---------|--------|--------|------------|
+| `RawConfigBuilder` | None | `dict[str, Any]` | stdlib only |
+| `DataClassConfigBuilder` | `@dataclass` | dataclass instance | stdlib only |
+| `ConfigBuilder` | `BaseModel` | Pydantic model | `pydantic` |
+
+All three share the same pipeline: `from_file()`, `from_env()`, `from_dict()`, `set()`, `peek()`. Pick the builder that matches your project's needs.
 
 ## � Common Patterns
 
@@ -134,6 +186,7 @@ Structure complex configurations with nested Pydantic models:
 ```python
 from pydantic import BaseModel, Field
 
+
 class DatabaseConfig(BaseModel):
     host: str
     port: int = 5432
@@ -141,16 +194,19 @@ class DatabaseConfig(BaseModel):
     password: str
     database: str
 
+
 class CacheConfig(BaseModel):
     enabled: bool = True
     ttl_seconds: int = 3600
     backend: str = "redis"
+
 
 class AppConfig(BaseModel):
     app_name: str
     debug: bool = False
     database: DatabaseConfig
     cache: CacheConfig = Field(default_factory=CacheConfig)
+
 
 config = ConfigBuilder(AppConfig).from_file("config.yaml").build()
 
@@ -191,11 +247,13 @@ Let Pydantic enforce your business rules:
 ```python
 from pydantic import BaseModel, Field
 
+
 class AppConfig(BaseModel):
     port: int = Field(default=8000, ge=1, le=65535)      # Port range
     workers: int = Field(default=4, ge=1, le=256)        # Worker count
     timeout: float = Field(default=30.0, gt=0)           # Positive timeout
     environment: str = Field(default="production", pattern="^(dev|staging|production)$")
+
 
 # Invalid config raises validation error
 config = ConfigBuilder(AppConfig).from_dict({"port": 99999}).build()  # ❌ Fails validation
@@ -249,6 +307,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from pyconfigre import ConfigBuilder
 
+
 # Configuration schema
 class DatabaseConfig(BaseModel):
     host: str = "localhost"
@@ -257,10 +316,12 @@ class DatabaseConfig(BaseModel):
     password: str
     database: str
 
+
 class LoggingConfig(BaseModel):
     level: str = Field(default="INFO", pattern="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
     format: str = "json"
     output: str = "stdout"
+
 
 class AppConfig(BaseModel):
     app_name: str = "my-api"
@@ -272,6 +333,7 @@ class AppConfig(BaseModel):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     secret_key: Optional[str] = None
 
+
 # Load configuration in your application startup
 def setup_config() -> AppConfig:
     """Load and validate application configuration."""
@@ -282,6 +344,7 @@ def setup_config() -> AppConfig:
         .from_env("MYAPI_")                         # Override with env vars
         .build()
     )
+
 
 # Usage
 config = setup_config()
@@ -328,14 +391,17 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from pyconfigre import ConfigBuilder
 
+
 class TestConfig(BaseModel):
     feature_enabled: bool = False
     api_key: str
+
 
 def test_config_validation():
     """Test that invalid config raises ValidationError."""
     with pytest.raises(ValidationError):
         ConfigBuilder(TestConfig).from_dict({}).build()  # Missing required api_key
+
 
 def test_config_building():
     """Test successful configuration building."""
@@ -347,6 +413,7 @@ def test_config_building():
     )
     assert config.feature_enabled is True
     assert config.api_key == "test-key"
+
 
 def test_config_priority():
     """Test configuration priority (file < env < dict)."""
@@ -374,9 +441,7 @@ def test_config_priority():
 **Never hardcode secrets:**
 ```python
 # ❌ DON'T DO THIS
-config = ConfigBuilder(AppConfig).from_dict({
-    "api_key": "sk-1234567890abcdef"
-}).build()
+config = ConfigBuilder(AppConfig).from_dict({"api_key": "sk-1234567890abcdef"}).build()
 
 # ✅ DO THIS
 config = (
@@ -391,10 +456,12 @@ config = (
 ```python
 from pydantic import BaseModel, Field
 
+
 class SecureConfig(BaseModel):
     api_key: str = Field(min_length=32)                        # Enforce minimum length
     timeout: float = Field(gt=0)                               # Must be positive
     environment: str = Field(pattern="^(dev|staging|prod)$")   # Whitelist values
+
 
 # Invalid config is rejected before it can cause problems
 config = ConfigBuilder(SecureConfig).from_env("APP_").build()  # Fails fast if invalid
@@ -410,9 +477,9 @@ chmod 600 config/production.yaml
 
 | Aspect | Status |
 |--------|--------|
-| **Version** | 0.2.0 |
+| **Version** | 0.3.0 |
 | **Python Support** | 3.10, 3.11, 3.12, 3.13, 3.14 |
-| **Test Coverage** | ~100% (200 tests) |
+| **Test Coverage** | ~99% (247 tests) |
 | **Type Checking** | Full MyPy strict compliance |
 | **CI/CD** | GitHub Actions (multi-version testing) |
 

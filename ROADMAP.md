@@ -5,13 +5,13 @@
 
 ## Release Timeline
 ```
-    ●               ●               ●               ◌               ◌               ◌
+    ●               ●               ●               ●               ◌               ◌
     │               │               │               │               │               │
-────●───────────────●───────────────●───────────────◌───────────────◌───────────────◌────
+────●───────────────●───────────────●───────────────●───────────────◌───────────────◌────
     │               │               │               │               │               │
   v0.1.0          v0.1.1          v0.2.0          v0.3.0          v0.4.0          v1.0.0
-  shipped         shipped         shipped         planned         planned         target
-  Feb 2026        Mar 2026        May 2026
+  shipped         shipped         shipped         shipped         planned         target
+  Feb 2026        Mar 2026        May 2026        Aug 2026
 ```
 
 **Legend:** `●` shipped · `◌` planned · `current` = active development
@@ -93,6 +93,7 @@ Blocks PRs at the CI level if they are missing a linked issue or use a non-stand
 ```python
 class RawConfigBuilder:
     """The pure pipeline — loading, merging, priority. No schema required."""
+
     def from_file(path, optional=False) -> "RawConfigBuilder": ...
     def from_env(prefix="", *, lowercase=True, strip_prefix=True, nested=True) -> "RawConfigBuilder": ...
     def from_dict(data) -> "RawConfigBuilder": ...
@@ -103,8 +104,10 @@ class RawConfigBuilder:
 
 class ConfigBuilder(RawConfigBuilder, Generic[T]):
     """Extends the pipeline with typed Pydantic validation."""
+
     def __init__(self, schema: type[T]) -> None: ...
     def build() -> T: ...  # terminal — validates and returns Pydantic model
+
     # inherits everything from RawConfigBuilder
 ```
 
@@ -160,7 +163,7 @@ pyconfigre/
 - `test_config_builder_still_inherits_all_pipeline_methods`
 - `test_deep_merge_shared_between_both_classes`
 
-## v0.3.0 — DataClassConfigBuilder + Folder Conversion 📋 Planned
+## v0.3.0 — DataClassConfigBuilder + Folder Conversion ✅
 
 **Goal:** Provide a lightweight typed configuration builder using Python's stdlib `dataclasses` — no Pydantic dependency required. Also converts `builder.py` into a `builder/` package now that three builder classes exist.
 
@@ -171,11 +174,13 @@ pyconfigre/
 ```python
 from dataclasses import dataclass, field
 
+
 @dataclass
 class DatabaseConfig:
     host: str = "localhost"
     port: int = 5432
     name: str = "mydb"
+
 
 @dataclass
 class AppConfig:
@@ -188,8 +193,10 @@ class AppConfig:
 ```python
 class DataClassConfigBuilder(RawConfigBuilder, Generic[T]):
     """Extends the pipeline with Python dataclass instantiation."""
+
     def __init__(self, schema: type[T]) -> None: ...
     def build() -> T: ...  # terminal — instantiates dataclass from merged dict
+
     # inherits everything from RawConfigBuilder
 ```
 
@@ -249,20 +256,17 @@ pyconfigre/
     └── ...                   ← unchanged
 ```
 
-### Tests to add
+### Tests
 
-- `test_build_basic_dataclass` — flat dataclass with defaults
-- `test_build_nested_dataclass` — recursive nested dataclass instantiation
-- `test_build_with_file_source` — `from_file()` → dataclass
-- `test_build_with_env_source` — `from_env()` → dataclass
-- `test_build_with_multiple_sources_priority` — priority order preserved
-- `test_type_coercion_str_to_int` — string `"8080"` → int `8080`
-- `test_type_coercion_str_to_bool` — string `"true"` → bool `True`, string `"0"` → bool `False`
-- `test_missing_required_field_raises` — no default + not provided → Error
-- `test_extra_fields_ignored` — dict keys not in dataclass are dropped
-- `test_fluent_api_returns_self` — chaining works correctly
-- `test_inheritance_from_raw_builder` — `isinstance` check
-- `test_non_dataclass_raises` — passing non-dataclass type → `TypeError`
+- 31 new unit tests in `tests/unit/builder/test_dataclass_builder.py` across 6 test classes
+- 16 integration tests distributed across existing workflow files:
+  - 12 validation/coercion tests → `test_validation.py` (`TestDataClassValidation`)
+  - 3 env coercion tests → `test_env_loading.py` (`TestDataClassENVCoercion`)
+  - 1 multi-source test → `test_multi_source_merging.py`
+- Dissolved `tests/integration/test_dataclass_loading.py` (21 tests) by moving 16 tests to workflow files and removing 5 redundant tests that re-exercised inherited `RawConfigBuilder` pipeline behaviour
+- Replaced duplicated `_env` context manager in 4 integration test files with shared `env_vars` from `conftest.py`
+- Added `SimpleConfigDC`, `DatabaseConfigDC`, `ComplexConfigDC` schemas to `tests/integration/conftest.py`
+- Total: 177 unit tests + 70 integration tests = 247 tests, 99.78% coverage
 
 ## v0.4.0 — New Pipeline Features 📋 Planned
 
@@ -277,9 +281,9 @@ pyconfigre/
 env = os.getenv("ENV", "development")
 config = (
     ConfigBuilder(AppConfig)
-    .from_file("config/base.yaml",   optional=True)
+    .from_file("config/base.yaml", optional=True)
     .from_file(f"config/{env}.yaml", optional=True)
-    .from_file("config/local.yaml",  optional=True)
+    .from_file("config/local.yaml", optional=True)
     .from_env("MYAPP_")
     .build()
 )
@@ -309,9 +313,8 @@ def from_env_layer(
     directory = Path(directory)
     env_value = os.getenv(env_var, default)
     return (
-        self
-        .from_file(directory / f"{base_name}{extension}",  optional=True)
-        .from_file(directory / f"{env_value}{extension}",  optional=True)
+        self.from_file(directory / f"{base_name}{extension}", optional=True)
+        .from_file(directory / f"{env_value}{extension}", optional=True)
         .from_file(directory / f"{local_name}{extension}", optional=True)
     )
 ```
@@ -354,8 +357,8 @@ print(schema_code)  # → valid Python with nested BaseModel classes
 
 ```python
 cfg = load_directory("config/")
-cfg.env.dev["host"]       # attribute access
-cfg["env"]["dev"]["host"] # subscript access
+cfg.env.dev["host"]  # attribute access
+cfg["env"]["dev"]["host"]  # subscript access
 ```
 
 **New module:** `pyconfigre/directory.py` — `ConfigNamespace` + `load_directory()`.
@@ -371,7 +374,7 @@ cfg["env"]["dev"]["host"] # subscript access
 config = (
     ConfigBuilder(AppConfig)
     .from_file("base.yaml")
-    .from_file("dev.yaml",  when=env_is("ENV", "dev"))
+    .from_file("dev.yaml", when=env_is("ENV", "dev"))
     .from_file("prod.yaml", when=env_is("ENV", "prod"))
     .from_env("MYAPP_")
     .build()
