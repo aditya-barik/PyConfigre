@@ -6,26 +6,12 @@ of PyConfigre — it enables the base-file + environment-override pattern that
 most real applications use. These tests verify every variant of that pattern.
 """
 
-import os
-from contextlib import contextmanager
-
 import pytest
 
 from pyconfigre import ConfigBuilder
 from pyconfigre.exceptions import ConfigNotFoundError
 
-from .conftest import SimpleConfig
-
-
-@contextmanager
-def _env(**kwargs):
-    for k, v in kwargs.items():
-        os.environ[k] = v
-    try:
-        yield
-    finally:
-        for k in kwargs:
-            os.environ.pop(k, None)
+from .conftest import SimpleConfig, env_vars
 
 
 @pytest.mark.integration
@@ -63,7 +49,7 @@ class TestOptionalFiles:
         """
         missing = cfg_dir / "config.yaml"
 
-        with _env(
+        with env_vars(
             MYAPP_NAME="ci-service",
             MYAPP_DEBUG="false",
             MYAPP_PORT="8080",

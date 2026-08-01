@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyconfigre"
-version = "0.2.0"
+version = "0.3.0"
 description = "Flexible configuration management with Pydantic validation, YAML/JSON/TOML support, and fluent API"
 readme = "README.md"
 license = {text = "MIT"}
@@ -127,6 +127,7 @@ addopts = [
     "--strict-markers",
     "--cov=src/pyconfigre",
     "--cov-report=term-missing",
+    "--cov-fail-under=80",
     "--cov-report=xml:.pytest/results/coverage.xml",
     "--cov-report=markdown-append:.pytest/results/coverage.md",
 ]

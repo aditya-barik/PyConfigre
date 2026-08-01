@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-08-02
+
+### ✨ New Features
+
+- **`DataClassConfigBuilder` class** (`builder/dataclass_builder.py`) — Lightweight typed configuration builder using Python's stdlib `dataclasses`. Fills the gap between `RawConfigBuilder` (untyped dict) and `ConfigBuilder` (requires Pydantic). Inherits the full pipeline from `RawConfigBuilder` and adds a `build()` terminal method that returns a typed dataclass instance.
+- **Basic type coercion** (`builder/dataclass_builder.py`) — Automatic coercion for common config-file scenarios where values are parsed as strings: `str` → `int` via `int()`, `str` → `float` via `float()`, `str` → `bool` via truthy/falsy string sets (`"true"`, `"1"`, `"yes"` → `True`; `"false"`, `"0"`, `"no"` → `False`).
+- **Recursive nested dataclass instantiation** (`builder/dataclass_builder.py`) — When a field is annotated with a `@dataclass` type and the merged data contains a `dict`, the dict is recursively instantiated into the nested dataclass. Extra keys not present in the dataclass are handled via the `unknown_fields` option.
+
+### 🔄 Changed
+
+- **`builder.py` converted to `builder/` package** — Three builder classes now justify a package structure. `builder.py` has been split into `builder/__init__.py` (re-exports), `builder/_merge.py` (`_deep_merge`), `builder/raw_builder.py` (`RawConfigBuilder`), `builder/config_builder.py` (`ConfigBuilder`), and `builder/dataclass_builder.py` (`DataClassConfigBuilder`). All existing import paths (`from pyconfigre import ConfigBuilder`, `from pyconfigre.builder import _deep_merge`) continue to work unchanged.
+- **`DataClassConfigBuilder` added to public API** (`__init__.py`) — Importable via `from pyconfigre import DataClassConfigBuilder` and included in `__all__`.
+- **Version bumped to `0.3.0`** (`pyproject.toml`)
+
+### 🧪 Tests
+
+- Added `tests/unit/builder/test_dataclass_builder.py` — 31 tests across 6 test classes covering: basic instantiation (4 tests), file/env/multi-source loading (4 tests), type coercion for str→int/float/bool with valid and invalid inputs (9 tests), error handling for missing required fields, extra fields (`warn`/`ignore`/`forbid`), invalid configuration, and non-dataclass schemas (8 tests), pass-through behaviour (2 tests), fluent API chaining and inheritance verification (4 tests).
+- Split `tests/unit/test_builder.py` into `tests/unit/builder/test_raw_builder.py`, `tests/unit/builder/test_config_builder.py`, and `tests/unit/builder/test_merge.py` (57 tests total) to mirror `src/pyconfigre/builder/` structure.
+- Updated 2 mock paths in `tests/unit/builder/test_raw_builder.py` — `pyconfigre.builder.ConfigLoader` → `pyconfigre.builder.raw_builder.ConfigLoader` to reflect the folder conversion.
+- All 177 unit tests pass. 99.78% coverage. `mypy` and `ruff` clean.
+- **Integration test restructure** — Dissolved component-oriented `test_dataclass_loading.py` (21 tests) into workflow-oriented files: 12 validation/coercion tests → `test_validation.py` (`TestDataClassValidation`), 3 env coercion tests → `test_env_loading.py` (`TestDataClassENVCoercion`), 1 multi-source test → `test_multi_source_merging.py`. Removed 5 redundant tests that re-exercised inherited `RawConfigBuilder` pipeline behaviour already proven by existing workflow files. Replaced duplicated `_env` context manager in 4 files with shared `env_vars` from `conftest.py`. Added `SimpleConfigDC`, `DatabaseConfigDC`, `ComplexConfigDC` dataclass schemas to `tests/integration/conftest.py`.
+
+---
+
 ## [0.2.0] - 2026-05-26
 
 ### ✨ New Features
@@ -302,5 +326,7 @@ Each has different strengths. Choose based on your project's specific needs.
 
 ---
 
+[0.3.0]: https://github.com/aditya-barik/PyConfigre/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/aditya-barik/PyConfigre/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/aditya-barik/PyConfigre/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/aditya-barik/PyConfigre/releases/tag/v0.1.0

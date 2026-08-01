@@ -7,25 +7,11 @@ correctly across all combinations, including deep nested merges, list
 replacement, and mid-chain inspection with peek().
 """
 
-import os
-from contextlib import contextmanager
-
 import pytest
 
-from pyconfigre import ConfigBuilder
+from pyconfigre import ConfigBuilder, DataClassConfigBuilder
 
-from .conftest import AppConfig, SimpleConfig
-
-
-@contextmanager
-def _env(**kwargs):
-    for k, v in kwargs.items():
-        os.environ[k] = v
-    try:
-        yield
-    finally:
-        for k in kwargs:
-            os.environ.pop(k, None)
+from .conftest import AppConfig, SimpleConfig, SimpleConfigDC, env_vars
 
 
 @pytest.mark.integration
@@ -41,7 +27,7 @@ class TestMultiSourceMerging:
         f = cfg_dir / "base.yaml"
         f.write_text("name: from-file\ndebug: false\nport: 8000\n")
 
-        with _env(SRC_NAME="from-env", SRC_DEBUG="true"):
+        with env_vars(SRC_NAME="from-env", SRC_DEBUG="true"):
             config = (
                 ConfigBuilder(SimpleConfig)
                 .from_file(f)  # name=from-file, debug=false, port=8000
@@ -144,7 +130,7 @@ class TestMultiSourceMerging:
         f = cfg_dir / "app.yaml"
         f.write_text("name: from-file\nport: 8000\n")
 
-        with _env(S_PORT="9000"):
+        with env_vars(S_PORT="9000"):
             config = (
                 ConfigBuilder(SimpleConfig)
                 .from_file(f)
@@ -175,3 +161,21 @@ class TestMultiSourceMerging:
         config = builder.from_dict({"api_key": "added-after-peek"}).build()
         assert config.name == "file-value"
         assert config.api_key == "added-after-peek"
+
+    def test_dataclass_multi_source_priority(self, cfg_dir):
+        """file < env < dict priority holds for DataClassConfigBuilder."""
+        f = cfg_dir / "base.yaml"
+        f.write_text("name: from-file\ndebug: false\nport: 8000\n")
+
+        with env_vars(DC_NAME="from-env", DC_DEBUG="true"):
+            config = (
+                DataClassConfigBuilder(SimpleConfigDC, unknown_fields="ignore")
+                .from_file(f)  # name=from-file, debug=false, port=8000
+                .from_env("DC_")  # name=from-env, debug=true
+                .from_dict({"port": 3000})  # port=3000
+                .build()
+            )
+
+        assert config.name == "from-env"
+        assert config.debug is True
+        assert config.port == 3000
