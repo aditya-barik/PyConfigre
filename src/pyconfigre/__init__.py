@@ -66,7 +66,7 @@ from .exceptions import (
 try:
     __version__ = version("pyconfigre")
 except PackageNotFoundError:  # pragma: no cover
-    __version__ = "0.3.0.dev"
+    __version__ = "0.3.0"
 
 __all__ = [
     "ConfigBuilder",
