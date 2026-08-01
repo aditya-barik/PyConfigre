@@ -312,7 +312,7 @@ def _instantiate_dataclass(
             and dataclasses.is_dataclass(field_type)
         ):
             kwargs[f.name] = _instantiate_dataclass(field_type, value, unknown_fields)
-        elif _is_concrete_type(field_type):
+        elif isinstance(field_type, type):
             kwargs[f.name] = _coerce_value(value, field_type)
         else:
             # Complex types (Optional, Union, etc.) — pass through
