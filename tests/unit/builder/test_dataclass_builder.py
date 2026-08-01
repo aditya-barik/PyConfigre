@@ -293,6 +293,15 @@ class TestDataClassConfigBuilderTypeCoercion:
         """
         assert _coerce_value("1+2j", complex) == "1+2j"
 
+    def test_coerce_value_passes_through_parameterized_generic(self) -> None:
+        """Test that parameterized generic aliases are passed through unchanged.
+
+        On Python 3.10, ``list[str]`` is an instance of ``type`` but cannot
+        be used as the second argument to ``isinstance()``. The helper must
+        detect this and return the original value.
+        """
+        assert _coerce_value(["a", "b"], list[str]) == ["a", "b"]
+
 
 # —— Error Handling Tests ————————————————————————————————————————
 

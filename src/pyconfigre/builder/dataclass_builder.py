@@ -8,12 +8,34 @@ No Pydantic dependency required.
 
 import dataclasses
 import warnings
-from typing import Any, Generic, Literal, TypeVar, cast, get_type_hints
+from typing import (
+    Any,
+    Generic,
+    Literal,
+    TypeGuard,
+    TypeVar,
+    cast,
+    get_origin,
+    get_type_hints,
+)
 
 from ..exceptions import ConfigValidationError
 from .raw_builder import RawConfigBuilder
 
 D = TypeVar("D")
+
+
+def _is_concrete_type(tp: Any) -> TypeGuard[type]:
+    """Return True if *tp* is a plain, non-parameterized class.
+
+    In Python 3.10, parameterized generics such as ``list[str]`` are
+    instances of :class:`type` (they are :class:`types.GenericAlias`
+    objects, which is a subclass of :class:`type`).  Such aliases cannot
+    be passed as the second argument to :func:`isinstance`, so we use
+    :func:`typing.get_origin` to distinguish them from concrete classes.
+    """
+    return isinstance(tp, type) and get_origin(tp) is None
+
 
 # Truthy / falsy string sets for bool coercion
 _TRUTHY: frozenset[str] = frozenset({"true", "1", "yes"})
@@ -195,6 +217,12 @@ def _coerce_value(value: Any, target_type: type) -> Any:
     Any
         The coerced value, or the original value if no coercion applies.
     """
+    # Parameterized generics (e.g. list[str]) cannot be used as the
+    # second argument to isinstance() on Python 3.10 and are not coercible
+    # by this helper, so pass them through unchanged.
+    if not _is_concrete_type(target_type):
+        return value
+
     # Already correct type — fast path
     if isinstance(value, target_type):
         # bool is a subclass of int, so int fields with bool values
@@ -280,11 +308,11 @@ def _instantiate_dataclass(
         # Nested dataclass: dict → dataclass instance
         if (
             isinstance(value, dict)
-            and isinstance(field_type, type)
+            and _is_concrete_type(field_type)
             and dataclasses.is_dataclass(field_type)
         ):
             kwargs[f.name] = _instantiate_dataclass(field_type, value, unknown_fields)
-        elif isinstance(field_type, type):
+        elif _is_concrete_type(field_type):
             kwargs[f.name] = _coerce_value(value, field_type)
         else:
             # Complex types (Optional, Union, etc.) — pass through
