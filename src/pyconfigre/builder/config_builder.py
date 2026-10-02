@@ -72,7 +72,7 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
             as the private attribute ``_config_class``.
         """
         self._config_class = config_class
-        self._data: dict[str, Any] = {}
+        super().__init__()
 
     # ------------------------------------------------------------------
     # Terminal method

@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from ..exceptions import ConfigLoadError
+from ..exceptions import ConfigLoadError, ConfigNotFoundError
 from .base import BaseLoader
 
 # TOML support for Python < 3.11
@@ -66,7 +66,7 @@ class TOMLLoader(BaseLoader):
                 data = tomllib.load(f)
                 return self._validate_dict(data)
 
-        except ConfigLoadError:
+        except (ConfigLoadError, ConfigNotFoundError):
             raise
         except Exception as e:
             if "tomllib" in str(type(e)) or "tomli" in str(type(e)):

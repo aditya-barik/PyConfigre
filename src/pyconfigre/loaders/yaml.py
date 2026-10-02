@@ -5,7 +5,7 @@ from typing import Any
 
 import yaml
 
-from ..exceptions import ConfigLoadError
+from ..exceptions import ConfigLoadError, ConfigNotFoundError
 from .base import BaseLoader
 
 
@@ -50,7 +50,7 @@ class YAMLLoader(BaseLoader):
                 data = yaml.safe_load(f)
                 return self._validate_dict(data)
 
-        except ConfigLoadError:
+        except (ConfigLoadError, ConfigNotFoundError):
             raise
         except yaml.YAMLError as e:
             raise ConfigLoadError(f"Failed to parse YAML file {path}: {e}") from e
