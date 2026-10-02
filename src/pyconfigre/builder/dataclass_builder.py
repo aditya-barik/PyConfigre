@@ -150,7 +150,7 @@ class DataClassConfigBuilder(RawConfigBuilder, Generic[D]):
                 f"got {unknown_fields!r}"
             )
         self._schema: type[D] = schema
-        self._data: dict[str, Any] = {}
+        super().__init__()
         self._unknown_fields: str = unknown_fields
 
     # ------------------------------------------------------------------
