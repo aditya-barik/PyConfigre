@@ -33,7 +33,7 @@ class RawConfigBuilder:
 
     Examples
     --------
-    Schmea-less usage::
+    Schema-less usage::
 
         from pyconfigre import RawConfigBuilder
 
