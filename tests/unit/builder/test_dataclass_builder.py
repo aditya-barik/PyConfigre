@@ -242,7 +242,7 @@ class TestDataClassConfigBuilderTypeCoercion:
 
     def test_type_coercion_str_to_bool_true(self) -> None:
         """Test that truthy strings are coerced to True."""
-        for truthy in ["true", "True", "TRUE", "1", "yes", "Yes", "YES"]:
+        for truthy in ["true", "True", "TRUE", "1", "yes", "Yes", "YES", "on", "On", "ON"]:
             config = (
                 DataClassConfigBuilder(FlatConfig).from_dict({"debug": truthy}).build()
             )
@@ -250,7 +250,7 @@ class TestDataClassConfigBuilderTypeCoercion:
 
     def test_type_coercion_str_to_bool_false(self) -> None:
         """Test that falsy strings are coerced to False."""
-        for falsy in ["false", "False", "FALSE", "0", "no", "No", "NO"]:
+        for falsy in ["false", "False", "FALSE", "0", "no", "No", "NO", "off", "Off", "OFF"]:
             config = (
                 DataClassConfigBuilder(FlatConfig).from_dict({"debug": falsy}).build()
             )

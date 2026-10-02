@@ -56,7 +56,7 @@ class TOMLLoader(BaseLoader):
         if tomllib is None:
             raise ImportError(
                 "TOML support requires 'tomli' package for Python < 3.11. "
-                "Install with: pip install pyconfig[toml]"
+                "Install with: pip install pyconfigre[toml]"
             )
 
         try:
