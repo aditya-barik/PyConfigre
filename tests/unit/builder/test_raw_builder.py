@@ -641,6 +641,42 @@ class TestRawConfigBuilderFluentAPI:
         assert second["port"] == 6000
         assert first is not second
 
+    def test_peek_nested_mutation_does_not_affect_builder(self) -> None:
+        """Test that mutating a *nested* dict returned by peek() does not
+        affect the builder's internal state.
+
+        This is the regression test for Fix 3.1.1 — the shallow-copy bug
+        where ``dict(self._data)`` shared nested dict references with the
+        builder.
+        """
+        raw_config_builder = RawConfigBuilder().from_dict(
+            {"server": {"host": "localhost", "port": 5000}}
+        )
+
+        snapshot = raw_config_builder.peek()
+        snapshot["server"]["port"] = 99999
+
+        assert raw_config_builder.peek()["server"]["port"] == 5000
+
+    def test_build_dict_nested_mutation_does_not_affect_builder(self) -> None:
+        """Test that mutating a *nested* dict returned by build_dict() does not
+        affect the builder's internal state.
+
+        Regression test for Fix 3.1.1 — same as the peek() test but for
+        build_dict().
+        """
+        raw_config_builder = RawConfigBuilder().from_dict(
+            {"database": {"host": "db.example.com", "port": 5432}}
+        )
+
+        first = raw_config_builder.build_dict()
+        first["database"]["port"] = 99999
+
+        second = raw_config_builder.build_dict()
+
+        assert second["database"]["port"] == 5432
+        assert first["database"]["port"] == 99999
+
     def test_build_dict_called_multiple_times_returns_consistent_copies(self) -> None:
         """Test that build_dict() produces equal results on repeated call.
 

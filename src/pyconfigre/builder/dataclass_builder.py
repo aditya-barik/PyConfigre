@@ -149,8 +149,8 @@ class DataClassConfigBuilder(RawConfigBuilder, Generic[D]):
                 f"unknown_fields must be one of {_UNKNOWN_FIELDS_MODES!r}, "
                 f"got {unknown_fields!r}"
             )
+        super().__init__()
         self._schema: type[D] = schema
-        self._data: dict[str, Any] = {}
         self._unknown_fields: str = unknown_fields
 
     # ------------------------------------------------------------------
