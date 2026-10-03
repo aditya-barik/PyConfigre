@@ -33,13 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ✨ New Features
 
-- **`RawConfigbuilder` class** (`builder.py`) — Schema-free configuration pipeline. Provides the full loading, merging, and priority system without requiring a Pydantic model. All pipeline methods (`from_file`, `from_env`, `from_dict`, `set`, `peek`) live on this base class.
-- **`build_dict()` terminal method** (`builder.py`) — Returns the final merged configuration as a plain dictionary. this is the terminal method for schema-free pipelines, analogous to `build()` on `ConfigBuilder`.
+- **`RawConfigBuilder` class** (`builder.py`) — Schema-free configuration pipeline. Provides the full loading, merging, and priority system without requiring a Pydantic model. All pipeline methods (`from_file`, `from_env`, `from_dict`, `set`, `peek`) live on this base class.
+- **`build_dict()` terminal method** (`builder.py`) — Returns the final merged configuration as a plain dictionary. This is the terminal method for schema-free pipelines, analogous to `build()` on `ConfigBuilder`.
 
 ### 🔄 Changed
 
 - **`ConfigBuilder` now extends `RawConfigBuilder`** (`builder.py`) — Two-class split: `RawConfigBuilder` is the base class with all pipeline logic; `ConfigBuilder(RawConfigBuilder, Generic[T])` adds typed Pydantic validation via `build()`. All existing `ConfigBuilder` usage is fully backwards-compatible.
-- **Fluent method return types use `Self`** (`builder.py`) — Pipeline methods now return `typing_extensions.Self` instead of a string-literal fprward reference. This gives correct return types through inheritance: calling `.from_file()` on a `ConfigBuilder[AppConfig]` returns `ConfigBuilder[AppConfig]`, not `RawConfigBuilder`.
+- **Fluent method return types use `Self`** (`builder.py`) — Pipeline methods now return `typing_extensions.Self` instead of a string-literal forward reference. This gives correct return types through inheritance: calling `.from_file()` on a `ConfigBuilder[AppConfig]` returns `ConfigBuilder[AppConfig]`, not `RawConfigBuilder`.
 - **`RawConfigBuilder` added to public API** (`__init__.py`) — importable via `from pyconfigre import RawConfigBuilder` and included in `__all__`.
 - **Version bumped to `0.2.0`** (`pyproject.toml`)
 

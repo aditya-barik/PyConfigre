@@ -85,7 +85,7 @@ class BaseLoader(ABC):
 
         Raises
         ------
-        ConfigLoadError
+        ConfigNotFoundError
             If file doesn't exist.
         """
         file_path = Path(path)
