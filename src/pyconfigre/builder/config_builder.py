@@ -5,7 +5,7 @@ Provides :class:`ConfigBuilder` — extends :class:`RawConfigBuilder` with
 ``Generic[T]`` and Pydantic ``model_validate`` on :meth:`build`.
 """
 
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
