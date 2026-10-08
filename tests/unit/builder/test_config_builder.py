@@ -9,10 +9,11 @@ import os
 from pathlib import Path
 
 import pytest
-from tests.conftest import ComplexConfig, SimpleConfig
 
 from pyconfigre import ConfigBuilder, RawConfigBuilder
 from pyconfigre.exceptions import ConfigValidationError
+
+from tests.conftest import ComplexConfig, SimpleConfig
 
 # —— ConfigBuilder (Child-class) Tests ————————————————————————————————————————————
 
