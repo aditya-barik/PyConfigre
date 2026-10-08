@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-from pyconfigre.exceptions import ConfigLoadError
+from pyconfigre.exceptions import ConfigLoadError, ConfigNotFoundError
 from pyconfigre.loaders import ConfigLoader, YAMLLoader
 
 
@@ -53,7 +53,7 @@ class TestYAMLLoader:
         loader = YAMLLoader()
         nonexistent_file = temp_dir / "nonexistent.yaml"
 
-        with pytest.raises(ConfigLoadError, match="File not found"):
+        with pytest.raises(ConfigNotFoundError, match="File not found"):
             loader(nonexistent_file)
 
     def test_yaml_empty_file(self, temp_dir: Path) -> None:

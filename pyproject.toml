@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyconfigre"
-version = "0.3.0"
+version = "0.3.1"
 description = "Flexible configuration management with Pydantic validation, YAML/JSON/TOML support, and fluent API"
 readme = "README.md"
 license = {text = "MIT"}
@@ -34,6 +34,7 @@ requires-python = ">=3.10"
 dependencies = [
     "pydantic>=2.0.0",
     "pyyaml>=6.0",
+    "typing_extensions>=4.0",
 ]
 
 [project.optional-dependencies]
@@ -62,7 +63,7 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["pyconfig*"]
+include = ["pyconfigre*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]

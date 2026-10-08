@@ -5,6 +5,7 @@ Provides :class:`RawConfigBuilder` — the base builder with loading, merging,
 and priority logic.  No schema or validation framework is required.
 """
 
+import copy
 import warnings
 from pathlib import Path
 from typing import Any
@@ -33,7 +34,7 @@ class RawConfigBuilder:
 
     Examples
     --------
-    Schmea-less usage::
+    Schema-less usage::
 
         from pyconfigre import RawConfigBuilder
 
@@ -309,7 +310,7 @@ class RawConfigBuilder:
                 .build_dict()
             )
         """
-        return dict(self._data)
+        return copy.deepcopy(self._data)
 
     def peek(self) -> dict[str, Any]:
         """
@@ -331,7 +332,7 @@ class RawConfigBuilder:
             print(builder.peek())   # {'debug': False, 'port': 8000}
             config = builder.from_env("MYAPP_").build_dict()
         """
-        return dict(self._data)
+        return copy.deepcopy(self._data)
 
     # kept for backwards compatibility — peek() is the preferred name
     def get_raw_data(self) -> dict[str, Any]:

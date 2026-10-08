@@ -7,21 +7,21 @@ labels: ""
 
 # Summary
 
-<!-- One or two sentences: what is the problem or goal, and why does it matter. -->
+<!-- One or two paragraphs: what is the problem or goal, and why does it matter. -->
 
 ---
 
-# Issue: <descriptive title about the problem or goal>
+# What to Change
 
-**Type:** <!-- Feature | Docs | Refactor | Test | CI -->
+<!-- Descriptive sub-heading about the problem or goal -->
 
 **Problem:**
-- <!-- Current pain point 1 -->
-- <!-- Current pain point 2 -->
+  - <!-- Current pain point 1 -->
+  - <!-- Current pain point 2 -->
 
 **Expected behaviour:**
-- <!-- Desired outcome 1 -->
-- <!-- Desired outcome 2 -->
+  - <!-- Desired outcome 1 -->
+  - <!-- Desired outcome 2 -->
 
 ---
 
@@ -33,5 +33,5 @@ labels: ""
 
 # Acceptance Criteria
 
-- <!-- Observable, verifiable outcome 1 -->
-- <!-- Observable, verifiable outcome 2 -->
+- [ ] <!-- Observable, verifiable outcome 1 -->
+- [ ] <!-- Observable, verifiable outcome 2 -->

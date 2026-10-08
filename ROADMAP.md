@@ -5,13 +5,13 @@
 
 ## Release Timeline
 ```
-    ●               ●               ●               ●               ◌               ◌
-    │               │               │               │               │               │
-────●───────────────●───────────────●───────────────●───────────────◌───────────────◌────
-    │               │               │               │               │               │
-  v0.1.0          v0.1.1          v0.2.0          v0.3.0          v0.4.0          v1.0.0
-  shipped         shipped         shipped         shipped         planned         target
-  Feb 2026        Mar 2026        May 2026        Aug 2026
+    ●        ●        ●        ●        ◌        ◌        ◌        ◌
+    │        │        │        │        │        │        │        │
+────●────────●────────●────────●────────◌────────◌────────◌────────◌────
+    │        │        │        │        │        │        │        │
+  v0.1.0   v0.1.1   v0.2.0   v0.3.0   v0.3.1   v0.4.0   v0.5.0   v1.0.0
+  shipped  shipped  shipped  shipped  current  planned  planned  target
+  Feb 2026 Mar 2026 May 2026 Aug 2026
 ```
 
 **Legend:** `●` shipped · `◌` planned · `current` = active development
@@ -268,11 +268,138 @@ pyconfigre/
 - Added `SimpleConfigDC`, `DatabaseConfigDC`, `ComplexConfigDC` schemas to `tests/integration/conftest.py`
 - Total: 177 unit tests + 70 integration tests = 247 tests, 99.78% coverage
 
-## v0.4.0 — New Pipeline Features 📋 Planned
+## v0.3.1 — Correctness Fixes 📋 Current
 
-**Goal:** Ship the features that make PyConfigre meaningfully differentiated from `pydantic-settings` and `dynaconf`.
+**Goal:** Fix all bugs and inconsistencies found during the v0.3.0 code review. Pure fixes — no new features, no API changes. All existing tests must continue to pass; new tests are added only to cover the fixed behaviour.
 
-### Feature 4.1 — `from_env_layer()`
+### Fix 3.1.1 — `peek()` / `build_dict()` shallow copy → deepcopy
+
+**Bug:** Both methods use `dict(self._data)` which is a shallow copy. Nested dict values share references with the builder's internal state:
+
+```python
+d = builder.peek()
+d["server"]["port"] = 9999  # mutates builder._data["server"]["port"]!
+```
+
+**Fix:** `import copy; return copy.deepcopy(self._data)` in both `peek()` and `build_dict()`.
+
+**File:** `builder/raw_builder.py` (lines 312, 334)
+
+### Fix 3.1.2 — Wrong package name in TOML error message
+
+**Bug:** `loaders/toml.py:59` says `pip install pyconfig[toml]` — wrong package name.
+
+**Fix:** Change to `pip install pyconfigre[toml]`.
+
+### Fix 3.1.3 — Wrong module name in `exceptions.py` docstring
+
+**Bug:** `exceptions.py:1` says `"""Exception classes for pyconfig."""`
+
+**Fix:** Change to `"""Exception classes for pyconfigre."""`
+
+### Fix 3.1.4 — Wrong exception in `_check_file_exists` docstring
+
+**Bug:** `loaders/base.py:88` Raises section says `ConfigLoadError`, but the method raises `ConfigNotFoundError`.
+
+**Fix:** Change docstring to `ConfigNotFoundError`.
+
+### Fix 3.1.5 — `RawConfigBuilder` docstring typo
+
+**Bug:** `builder/raw_builder.py:36` says `Schmea-less usage::`.
+
+**Fix:** Change to `Schema-less usage::`.
+
+### Fix 3.1.6 — Missing `super().__init__()` calls
+
+**Bug:** `ConfigBuilder.__init__` and `DataClassConfigBuilder.__init__` both set `self._data = {}` directly instead of calling `super().__init__()`. If `RawConfigBuilder.__init__` changes in the future, the subclasses will silently diverge.
+
+**Fix:** Call `super().__init__()` and remove the redundant `self._data = {}` line in both `config_builder.py` and `dataclass_builder.py`.
+
+### Fix 3.1.7 — Declare `typing_extensions` as explicit dependency
+
+**Bug:** `raw_builder.py` imports `from typing_extensions import Self`, but `typing_extensions` is not in `pyproject.toml` dependencies. It works because Pydantic pulls it in transitively — but if Pydantic becomes optional in v0.4.0, `RawConfigBuilder` and `DataClassConfigBuilder` will break.
+
+**Fix:** Add `typing_extensions>=4.0` to `[project] dependencies`.
+
+### Fix 3.1.8 — Loader exception handling silently swallows `ConfigNotFoundError`
+
+**Bug:** In `json.py`, `yaml.py`, and `toml.py`, the pattern `except ConfigLoadError: raise` does not catch `ConfigNotFoundError` (a sibling, not subclass of `ConfigLoadError`). The `ConfigNotFoundError` from `_check_file_exists()` falls through to `except Exception` and gets re-wrapped as `ConfigLoadError`, losing the original exception type.
+
+**Fix:** Change to `except (ConfigLoadError, ConfigNotFoundError): raise` in all three loaders.
+
+### Fix 3.1.9 — Boolean coercion inconsistency
+
+**Bug:** `ENVLoader._parse_value` recognises `"on"` and `"off"` as booleans, but `dataclass_builder._coerce_value` does not. A user setting `MY_DEBUG=on` gets `True` from env loading, but `debug: "on"` from a YAML file through `DataClassConfigBuilder` fails to coerce.
+
+**Fix:** Add `"on"` to `_TRUTHY` and `"off"` to `_FALSY` in `dataclass_builder.py`.
+
+### Fix 3.1.10 — `_instantiate_dataclass` type guard inconsistency
+
+**Bug:** Line 315 of `dataclass_builder.py` uses `isinstance(field_type, type)` while lines 310–312 use `_is_concrete_type(field_type)`. On Python 3.10, parameterized generics like `list[str]` pass `isinstance(type)` but fail `_is_concrete_type()`. Not a runtime crash (because `_coerce_value` has its own guard), but inconsistent and fragile.
+
+**Fix:** Change line 315 to `elif _is_concrete_type(field_type):`.
+
+### Fix 3.1.11 — CI workflow action version inconsistencies
+
+**Bug:** `pr-lifecycle.yml` (lines 50, 91) and `sync-labels.yml` (line 36) use `actions/checkout@v5` while all other workflows use `@v6`.
+
+**Fix:** Bump to `actions/checkout@v6`.
+
+### Fix 3.1.12 — Missing `tests/unit/__init__.py`
+
+**Bug:** Every other test directory has an `__init__.py` (`tests/`, `tests/integration/`, `tests/unit/builder/`, `tests/unit/loaders/`) except `tests/unit/`.
+
+**Fix:** Add empty `tests/unit/__init__.py`.
+
+### Fix 3.1.13 — `pyproject.toml` setuptools include pattern too broad
+
+**Bug:** `[tool.setuptools.packages.find]` has `include = ["pyconfig*"]` which would also match an unrelated `pyconfig` package if one existed in `src/`.
+
+**Fix:** Change to `include = ["pyconfigre*"]`.
+
+### Fix 3.1.14 — CHANGELOG v0.2.0 typos
+
+**Bug:** Three cosmetic typos in the v0.2.0 changelog:
+- `RawConfigbuilder` → `RawConfigBuilder` (line 37)
+- `this is the terminal` → `This is the terminal` (line 38)
+- `fprward reference` → `forward reference` (line 42)
+
+**Fix:** Correct all three.
+
+### Tests
+
+- Add regression test for nested-dict mutation through `peek()` (the existing test only checks top-level mutation)
+- Add test for `"on"` / `"off"` bool coercion in `DataClassConfigBuilder`
+- Verify `ConfigNotFoundError` propagates through loaders without re-wrapping
+
+## v0.4.0 — Builder Feature Parity + New Capabilities 📋 Planned
+
+**Goal:** Bring feature parity across all three builders and make Pydantic an optional dependency. Also ships the `from_env_layer()` convenience method.
+
+### Feature 4.1 — `unknown_fields` parameter on `RawConfigBuilder` and `ConfigBuilder`
+
+**Problem:** Only `DataClassConfigBuilder` supports `unknown_fields`. `RawConfigBuilder` silently accepts everything (fine for dicts), but `ConfigBuilder` users have no pre-build way to catch unexpected keys — they rely on Pydantic's `model_config` which is schema-side, not builder-side.
+
+**Solution:** Add `unknown_fields` parameter to `RawConfigBuilder.__init__()` and `ConfigBuilder.__init__()` with the same `"ignore"` / `"warn"` / `"forbid"` modes. For `RawConfigBuilder`, validation happens at `build_dict()` time against a provided key set; for `ConfigBuilder`, validation happens at `build()` time against the Pydantic model fields.
+
+### Feature 4.2 — `missing_fields` handling across all builders
+
+**Problem:** Missing required fields currently raise different exceptions depending on the builder (`ValidationError` for Pydantic, `TypeError` for dataclasses, nothing for raw). There is no unified pre-build check.
+
+**Solution:** Add `missing_fields` parameter (`"raise"` / `"warn"` / `"ignore"`) that checks for required fields before delegating to the schema validator.
+
+### Feature 4.3 — Make Pydantic an optional dependency (`pyconfigre[pydantic]`)
+
+**Problem:** `pydantic>=2.0.0` is a hard dependency in `pyproject.toml`, but `RawConfigBuilder` and `DataClassConfigBuilder` do not use Pydantic at all. Projects that only need dataclass or dict-based config carry an unnecessary heavy dependency.
+
+**Solution:**
+- Move `pydantic>=2.0.0` from `[project] dependencies` to `[project.optional-dependencies] pydantic`
+- Guard `from pydantic import ...` in `config_builder.py` with a try/except `ImportError`
+- Raise a clear `ImportError` at `ConfigBuilder.__init__()` if Pydantic is not installed
+- Update `[project.optional-dependencies] all` to include `pydantic`
+- Core dependencies become: `pyyaml>=6.0`, `typing_extensions>=4.0` only
+
+### Feature 4.4 — `from_env_layer()`
 
 **Problem:** The base → {env} → local layering pattern is written manually in every real project. It should be a single method call.
 
@@ -297,7 +424,7 @@ config = (
 )
 ```
 
-### Implementation:
+**Implementation:**
 
 ```python
 def from_env_layer(
@@ -321,7 +448,11 @@ def from_env_layer(
 
 **Tests to add:** 8 tests covering base file, env-specific file, missing files skipped, local override priority, env var respected, custom base name, custom extension, default env value.
 
-### Feature 4.2 — Schema Inference (`infer_schema()`)
+## v0.5.0 — New Pipeline Features 📋 Planned
+
+**Goal:** Ship the features that make PyConfigre meaningfully differentiated from `pydantic-settings` and `dynaconf`.
+
+### Feature 5.1 — Schema Inference (`infer_schema()`)
 
 **Problem:** Writing a Pydantic model for a 50-key nested config file from scratch is the biggest adoption friction point for large existing projects.
 
@@ -333,7 +464,7 @@ schema_code = RawConfigBuilder.infer_schema(raw, name="AppConfig")
 print(schema_code)  # → valid Python with nested BaseModel classes
 ```
 
-### Type inference rules:
+**Type inference rules:**
 
 | Python value | Inferred type |
 |--------------|---------------|
@@ -345,11 +476,9 @@ print(schema_code)  # → valid Python with nested BaseModel classes
 | `None` | `Any` |
 | `{"host": "x"}` | new nested BaseModel subclass |
 
-### Tests to add:
-8 tests covering flat dict, nested subclass creation, bool-before-int ordering, None → Optional, list element inference, valid Python output (exec assertion), custom name, write-to-file.
+**Tests to add:** 8 tests covering flat dict, nested subclass creation, bool-before-int ordering, None → Optional, list element inference, valid Python output (exec assertion), custom name, write-to-file.
 
-
-### Feature 4.3 — Directory Loading (`from_directory()`)
+### Feature 5.2 — Directory Loading (`from_directory()`)
 
 **Problem:** Large projects organise configs as a folder of files. There is no way to load this structure into a single accessible namespace.
 
@@ -365,7 +494,7 @@ cfg["env"]["dev"]["host"]  # subscript access
 
 **Tests to add:** 14+ tests covering all access patterns, missing root, non-directory path, unknown extensions (silent skip and explicit raise), `to_dict()` round-trip, read-only enforcement, `recursive=False`, hidden file skipping, and pipeline integration.
 
-**Feature 4.4 — Conditional Loading (`when=` parameter)**
+### Feature 5.3 — Conditional Loading (`when=` parameter)
 
 **Problem:** Conditional source application today breaks the fluent chain with if blocks.
 
@@ -387,15 +516,15 @@ config = (
 
 **Tests to add:** 20+ tests covering all condition forms, all operators, `all`/`any` logic, error cases, helpers, and mixin integration.
 
-**File structure at v0.4.0 (folder conversion)**
+**File structure at v0.5.0:**
 
 ```
 pyconfigre/
 ├── __init__.py
 ├── exceptions.py
-├── conditions.py             ← new in v0.4.0
-├── directory.py              ← new in v0.4.0
-├── builder/                  ← converted from builder.py
+├── conditions.py             ← new in v0.5.0
+├── directory.py              ← new in v0.5.0
+├── builder/
 │   ├── __init__.py           ← re-exports all three builders
 │   ├── raw_builder.py        ← RawConfigBuilder
 │   ├── dataclass_builder.py  ← DataClassConfigBuilder (added in v0.3.0)
@@ -407,7 +536,7 @@ pyconfigre/
 
 ## v1.0.0 — Advanced Features 📋 Target
 
-Features that complete the differentiator story. Planned after v0.4.0 is stable.
+Features that complete the differentiator story. Planned after v0.5.0 is stable.
 
 **Secret Backend Loaders** — `from_secrets("aws://...")`, `from_secrets("vault://...")`. New `AWSSecretsLoader` and `VaultLoader` registered via `ConfigLoader.register_loader()`. Optional extras: `pip install pyconfigre[aws]`, `pyconfigre[vault]` and other secret backends.
 
