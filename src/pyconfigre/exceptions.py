@@ -1,4 +1,4 @@
-"""Exception classes for pyconfig."""
+"""Exception classes for pyconfigre."""
 
 
 class ConfigError(Exception):

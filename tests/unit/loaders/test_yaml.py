@@ -6,7 +6,11 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-from pyconfigre.exceptions import ConfigLoadError
+from pyconfigre.exceptions import (
+    ConfigLoadError,
+    ConfigNotFoundError,
+    ConfigValidationError,
+)
 from pyconfigre.loaders import ConfigLoader, YAMLLoader
 
 
@@ -53,7 +57,7 @@ class TestYAMLLoader:
         loader = YAMLLoader()
         nonexistent_file = temp_dir / "nonexistent.yaml"
 
-        with pytest.raises(ConfigLoadError, match="File not found"):
+        with pytest.raises(ConfigNotFoundError, match="File not found"):
             loader(nonexistent_file)
 
     def test_yaml_empty_file(self, temp_dir: Path) -> None:
@@ -115,6 +119,20 @@ class TestYAMLLoader:
         with patch("yaml.safe_load", side_effect=yaml.YAMLError("Parse error")):
             with pytest.raises(ConfigLoadError, match="Failed to parse YAML"):
                 loader(config_file)
+
+    def test_yaml_non_dict_root(self, temp_dir: Path) -> None:
+        """Test handling of YAML with non-dict root.
+
+        This tests the `except ConfigValidationError: raise` branch
+        when the root of the YAML is not a dictionary.
+        """
+        non_dict_file = temp_dir / "list_root.yaml"
+        non_dict_file.write_text("- item1\n- item2\n- item3\n")
+
+        loader = YAMLLoader()
+
+        with pytest.raises(ConfigValidationError, match="not a dictionary"):
+            loader(non_dict_file)
 
     def test_yaml_config_load_error_passthrough(self, temp_dir: Path) -> None:
         """Test that ConfigLoadError is re-raised as-is.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyconfigre"
-version = "0.3.0"
+version = "0.3.1"
 description = "Flexible configuration management with Pydantic validation, YAML/JSON/TOML support, and fluent API"
 readme = "README.md"
 license = {text = "MIT"}
@@ -34,6 +34,7 @@ requires-python = ">=3.10"
 dependencies = [
     "pydantic>=2.0.0",
     "pyyaml>=6.0",
+    "typing_extensions>=4.0",
 ]
 
 [project.optional-dependencies]
@@ -43,7 +44,7 @@ dev = [
     "pytest>=9.0.2,<9.1",
     "pytest-cov>=7.0.0,<7.1",
     "ruff>=0.14.14",
-    "mypy>=1.19.1,<1.920",
+    "mypy>=1.19.1,<1.20.0",
     "types-pyyaml>=6.0.12.20250915,<6.1",
     "coverage>=7.13.2,<7.14",
 ]
@@ -62,7 +63,7 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["pyconfig*"]
+include = ["pyconfigre*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
@@ -102,11 +103,6 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 strict_equality = true
 warn_incomplete_stub = true
-
-# Allow tests to skip strict checking
-[[tool.mypy.overrides]]
-module = "tests.*"
-ignore_errors = true
 
 # Handle missing type stubs gracefully
 [[tool.mypy.overrides]]

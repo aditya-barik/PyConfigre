@@ -38,8 +38,8 @@ def _is_concrete_type(tp: Any) -> TypeGuard[type]:
 
 
 # Truthy / falsy string sets for bool coercion
-_TRUTHY: frozenset[str] = frozenset({"true", "1", "yes"})
-_FALSY: frozenset[str] = frozenset({"false", "0", "no"})
+_TRUTHY: frozenset[str] = frozenset({"true", "1", "yes", "on"})
+_FALSY: frozenset[str] = frozenset({"false", "0", "no", "off"})
 
 # Valid modes for handling fields present in the merged data but not in the dataclass
 _UNKNOWN_FIELDS_MODES: frozenset[str] = frozenset({"ignore", "warn", "forbid"})
@@ -149,8 +149,8 @@ class DataClassConfigBuilder(RawConfigBuilder, Generic[D]):
                 f"unknown_fields must be one of {_UNKNOWN_FIELDS_MODES!r}, "
                 f"got {unknown_fields!r}"
             )
+        super().__init__()
         self._schema: type[D] = schema
-        self._data: dict[str, Any] = {}
         self._unknown_fields: str = unknown_fields
 
     # ------------------------------------------------------------------
@@ -312,7 +312,7 @@ def _instantiate_dataclass(
             and dataclasses.is_dataclass(field_type)
         ):
             kwargs[f.name] = _instantiate_dataclass(field_type, value, unknown_fields)
-        elif isinstance(field_type, type):
+        elif _is_concrete_type(field_type):
             kwargs[f.name] = _coerce_value(value, field_type)
         else:
             # Complex types (Optional, Union, etc.) — pass through
