@@ -8,7 +8,7 @@ and non-object root handling.
 import pytest
 
 from pyconfigre import ConfigBuilder
-from pyconfigre.exceptions import ConfigLoadError
+from pyconfigre.exceptions import ConfigLoadError, ConfigValidationError
 
 from .conftest import AllTypesConfig, AppConfig, SimpleConfig
 
@@ -105,7 +105,8 @@ class TestJSONLoading:
             ConfigBuilder(SimpleConfig).from_file(f).build()
 
     def test_json_array_root_raises(self, cfg_dir):
-        """A JSON file whose root is an array (not an object) raises ConfigLoadError.
+        """
+        A JSON file whose root is an array (not an object) raises ConfigValidationError.
 
         PyConfigre requires configuration to be a key-value mapping. A root-level
         array has no key names and cannot be mapped to a Pydantic model.
@@ -113,5 +114,5 @@ class TestJSONLoading:
         f = cfg_dir / "array.json"
         f.write_text('["item1", "item2", "item3"]')
 
-        with pytest.raises(ConfigLoadError, match="not a dictionary"):
+        with pytest.raises(ConfigValidationError, match="not a dictionary"):
             ConfigBuilder(SimpleConfig).from_file(f).build()

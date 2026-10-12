@@ -8,7 +8,7 @@ Covers flat configs, nested sections, all primitive types, both .yaml and
 import pytest
 
 from pyconfigre import ConfigBuilder
-from pyconfigre.exceptions import ConfigLoadError
+from pyconfigre.exceptions import ConfigLoadError, ConfigValidationError
 
 from .conftest import AllTypesConfig, AppConfig, SimpleConfig
 
@@ -127,6 +127,19 @@ class TestYAMLLoading:
 
         assert config.name == "from-yml"
         assert config.port == 7777
+
+    def test_yaml_list_root_raises(self, cfg_dir):
+        """
+        A YAML file whose root is a list (not an object) raises ConfigValidationError.
+
+        PyConfigre requires configuration to be a key-value mapping. A root-level
+        array has no key names and cannot be mapped to a Pydantic model.
+        """
+        f = cfg_dir / "list.yaml"
+        f.write_text("- item1\n- item2\n- item3\n")
+
+        with pytest.raises(ConfigValidationError, match="not a dictionary"):
+            ConfigBuilder(SimpleConfig).from_file(f).build()
 
     def test_yaml_parse_error(self, cfg_dir):
         """A YAML file with invalid syntax raises ConfigLoadError."""
