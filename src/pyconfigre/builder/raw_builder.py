@@ -12,7 +12,7 @@ from typing import Any
 
 from typing_extensions import Self
 
-from ..exceptions import ConfigLoadError, ConfigNotFoundError
+from ..exceptions import ConfigLoadError, ConfigNotFoundError, ConfigValidationError
 from ..loaders import ConfigLoader
 from ._merge import _deep_merge
 
@@ -120,7 +120,7 @@ class RawConfigBuilder:
         try:
             data = ConfigLoader.detect_and_load(path)
             self._merge(data)
-        except (ConfigLoadError, ConfigNotFoundError):
+        except (ConfigLoadError, ConfigNotFoundError, ConfigValidationError):
             raise
         except Exception as e:
             raise ConfigLoadError(
@@ -276,7 +276,7 @@ class RawConfigBuilder:
                 raise TypeError(
                     f"Cannot set '{key}': '{path_so_far}' is already set to a "
                     f"{type(node).__name__!r} value, not a dict.  "
-                    f"Call from_dict({{{path_so_far!r}: {{…}}}})) to replace it first."
+                    f"Call from_dict({{{path_so_far!r}: {{…}}}}) to replace it first."
                 )
             current = node
         current[keys[-1]] = value
@@ -291,7 +291,7 @@ class RawConfigBuilder:
         Return the final merged configuration as a plain dictionary.
 
         This is the terminal method for schema-free pipelines.  It returns
-        a shallow copy of the assembled data, equivalent to calling
+        a deep copy of the assembled data, equivalent to calling
         :meth:`peek` but signalling intent that the pipeline is complete.
 
         Returns

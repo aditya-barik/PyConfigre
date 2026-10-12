@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ..exceptions import ConfigLoadError, ConfigNotFoundError
+from ..exceptions import ConfigLoadError, ConfigNotFoundError, ConfigValidationError
 from .base import BaseLoader
 
 
@@ -39,8 +39,12 @@ class JSONLoader(BaseLoader):
 
         Raises
         ------
+        ConfigNotFoundError
+            If the file does not exist.
         ConfigLoadError
-            If file cannot be loaded or parsed.
+            If the file cannot be read or parsed.
+        ConfigValidationError
+            If the parsed content is not a dictionary.
         """
         try:
             file_path = self._check_file_exists(path)
@@ -49,7 +53,7 @@ class JSONLoader(BaseLoader):
                 data = json.load(f)
                 return self._validate_dict(data)
 
-        except (ConfigLoadError, ConfigNotFoundError):
+        except (ConfigLoadError, ConfigNotFoundError, ConfigValidationError):
             raise
         except json.JSONDecodeError as e:
             raise ConfigLoadError(f"Failed to parse JSON file {path}: {e}") from e
