@@ -35,14 +35,20 @@ class BaseLoader(ABC):
 
         Raises
         ------
+        NotImplementedError
+            Always raised by the base stub — subclasses must override.
         ConfigNotFoundError
-            If loading or parsing fails.
+            If the configuration source does not exist (subclass contract).
+        ConfigLoadError
+            If reading or parsing fails (subclass contract).
+        ConfigValidationError
+            If the loaded data is not a dictionary (subclass contract).
         """
         raise NotImplementedError("Subclasses must implement __call__ method")
 
     def _validate_dict(self, data: Any) -> dict[str, Any]:
         """
-        Validate that data is a dictionary, return empty dict if not.
+        Validate that data is a dictionary; return empty dict for ``None``.
 
         This common logic is used by all loaders to ensure consistent behavior.
 
@@ -54,12 +60,12 @@ class BaseLoader(ABC):
         Returns
         -------
         dict[str, Any]
-            The data if it's a dict, otherwise an empty dict.
+            The data if it's a dict, or an empty dict if *data* is ``None``.
 
         Raises
         ------
         ConfigValidationError
-            If data is not a dictionary.
+            If *data* is neither a dict nor ``None``.
         """
         if data is not None:
             if isinstance(data, dict):
@@ -85,7 +91,7 @@ class BaseLoader(ABC):
 
         Raises
         ------
-        ConfigLoadError
+        ConfigNotFoundError
             If file doesn't exist.
         """
         file_path = Path(path)

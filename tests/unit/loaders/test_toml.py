@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from pyconfigre.exceptions import ConfigLoadError
+from pyconfigre.exceptions import ConfigLoadError, ConfigNotFoundError
 from pyconfigre.loaders import TOMLLoader
 
 
@@ -38,7 +38,7 @@ class TestTOMLLoader:
         loader = TOMLLoader()
         nonexistent_file = temp_dir / "nonexistent.toml"
 
-        with pytest.raises(ConfigLoadError, match="File not found"):
+        with pytest.raises(ConfigNotFoundError, match="File not found"):
             loader(nonexistent_file)
 
     def test_toml_invalid_syntax(self, temp_dir: Path) -> None:

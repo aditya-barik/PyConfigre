@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-10-08
+
+### 🐛 Bug Fixes
+
+- **Shallow-copy bug in `peek()` and `build_dict()`** (`builder/raw_builder.py`) — Both methods now return `copy.deepcopy(self._data)` instead of `dict(self._data)`. Previously, nested dicts shared references with the builder's internal state, allowing external mutations to corrupt subsequent builds.
+- **Missing `super().__init__()` in builder subclasses** (`builder/config_builder.py`, `builder/dataclass_builder.py`) — `ConfigBuilder` and `DataClassConfigBuilder` now call `super().__init__()` to ensure `RawConfigBuilder.__init__` runs. Prevents divergence if the base class adds state in the future.
+- **Loader exception propagation** (`loaders/json.py`, `loaders/yaml.py`, `loaders/toml.py`, `builder/raw_builder.py`) — All three file loaders and `from_file()` now catch `(ConfigLoadError, ConfigNotFoundError, ConfigValidationError)` and re-raise, preventing custom exceptions from being accidentally wrapped as `ConfigLoadError`. A non-dict root (e.g. a JSON array) now correctly raises `ConfigValidationError` instead of `ConfigLoadError`.
+- **TOML error message referenced wrong package** (`loaders/toml.py`) — Changed `pyconfig[toml]` → `pyconfigre[toml]` in the `ImportError` message when `tomli` is unavailable.
+- **Boolean coercion missing `"on"` / `"off"`** (`builder/dataclass_builder.py`) — `_TRUTHY` and `_FALSY` frozensets now include `"on"` and `"off"` to match `ENVLoader._parse_value` behaviour.
+- **Inconsistent type guard in `_instantiate_dataclass`** (`builder/dataclass_builder.py`) — Replaced bare `isinstance(tp, type)` with `_is_concrete_type(tp)` for consistent handling of parameterised generics on Python 3.10.
+- **Extra closing parenthesis in `set()` error message** (`builder/raw_builder.py`) — Removed stray `)` in the suggestion string for the `TypeError` raised when a dot-notation path traverses a scalar.
+
+### 📝 Documentation
+
+- **Wrong package name in `exceptions.py` module docstring** — Corrected to `pyconfigre`.
+- **Wrong exception type in `_check_file_exists` docstring** (`loaders/base.py`) — Changed `FileNotFoundError` → `ConfigNotFoundError` to match the actual raised exception.
+- **Wrong exception in `BaseLoader.__call__` docstring** (`loaders/base.py`) — Updated Raises section to accurately document `NotImplementedError` (base stub) and the subclass contract (`ConfigNotFoundError`, `ConfigLoadError`).
+- **Misleading `_validate_dict` summary** (`loaders/base.py`) — Clarified that the method raises `ConfigValidationError` for non-dict values and returns `{}` only for `None`.
+- **Typo in `RawConfigBuilder` docstring** (`builder/raw_builder.py`) — Fixed minor wording.
+- **CHANGELOG typos** — Corrected three typos in v0.2.0 and v0.1.1 entries.
+
+### 🏗️ Infrastructure
+
+- **`typing_extensions` declared as dependency** (`pyproject.toml`) — Added `typing_extensions>=4.0` to `[project.dependencies]` so `Self` is available on Python 3.10.
+- **CI checkout bumped to `v6`** (`.github/workflows/*.yml`) — All workflows now use `actions/checkout@v6`.
+- **Missing `tests/unit/__init__.py`** — Added so `pytest` can collect tests when installed as a package.
+- **`setuptools` include pattern tightened** (`pyproject.toml`) — Changed `pyconfigre` → `pyconfigre*` to include sub-packages.
+- **`pypi-publish.yml` version verification** — Added a step that checks `pyproject.toml` version matches the release tag before building.
+- **Fallback `__version__` updated** (`__init__.py`) — Changed `"0.3.0"` → `"0.3.1"` to match `pyproject.toml`.
+
+### 🧪 Tests
+
+- All 249 unit tests pass. 100% code coverage. `mypy` and `ruff` clean.
+- Added regression tests for shallow-copy bug in `peek()` and `build_dict()` (nested mutation).
+- Added `"on"` / `"off"` to boolean coercion test cases.
+- Added `ConfigNotFoundError` passthrough tests to JSON, YAML, and TOML loader suites.
+
+---
+
 ## [0.3.0] - 2026-08-02
 
 ### ✨ New Features
@@ -33,13 +72,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ✨ New Features
 
-- **`RawConfigbuilder` class** (`builder.py`) — Schema-free configuration pipeline. Provides the full loading, merging, and priority system without requiring a Pydantic model. All pipeline methods (`from_file`, `from_env`, `from_dict`, `set`, `peek`) live on this base class.
-- **`build_dict()` terminal method** (`builder.py`) — Returns the final merged configuration as a plain dictionary. this is the terminal method for schema-free pipelines, analogous to `build()` on `ConfigBuilder`.
+- **`RawConfigBuilder` class** (`builder.py`) — Schema-free configuration pipeline. Provides the full loading, merging, and priority system without requiring a Pydantic model. All pipeline methods (`from_file`, `from_env`, `from_dict`, `set`, `peek`) live on this base class.
+- **`build_dict()` terminal method** (`builder.py`) — Returns the final merged configuration as a plain dictionary. This is the terminal method for schema-free pipelines, analogous to `build()` on `ConfigBuilder`.
 
 ### 🔄 Changed
 
 - **`ConfigBuilder` now extends `RawConfigBuilder`** (`builder.py`) — Two-class split: `RawConfigBuilder` is the base class with all pipeline logic; `ConfigBuilder(RawConfigBuilder, Generic[T])` adds typed Pydantic validation via `build()`. All existing `ConfigBuilder` usage is fully backwards-compatible.
-- **Fluent method return types use `Self`** (`builder.py`) — Pipeline methods now return `typing_extensions.Self` instead of a string-literal fprward reference. This gives correct return types through inheritance: calling `.from_file()` on a `ConfigBuilder[AppConfig]` returns `ConfigBuilder[AppConfig]`, not `RawConfigBuilder`.
+- **Fluent method return types use `Self`** (`builder.py`) — Pipeline methods now return `typing_extensions.Self` instead of a string-literal forward reference. This gives correct return types through inheritance: calling `.from_file()` on a `ConfigBuilder[AppConfig]` returns `ConfigBuilder[AppConfig]`, not `RawConfigBuilder`.
 - **`RawConfigBuilder` added to public API** (`__init__.py`) — importable via `from pyconfigre import RawConfigBuilder` and included in `__all__`.
 - **Version bumped to `0.2.0`** (`pyproject.toml`)
 
@@ -326,6 +365,7 @@ Each has different strengths. Choose based on your project's specific needs.
 
 ---
 
+[0.3.1]: https://github.com/aditya-barik/PyConfigre/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/aditya-barik/PyConfigre/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/aditya-barik/PyConfigre/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/aditya-barik/PyConfigre/compare/v0.1.0...v0.1.1

@@ -5,7 +5,7 @@ Provides :class:`ConfigBuilder` — extends :class:`RawConfigBuilder` with
 ``Generic[T]`` and Pydantic ``model_validate`` on :meth:`build`.
 """
 
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
@@ -71,8 +71,8 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
             configuration when :meth:`build` is called.  Stored internally
             as the private attribute ``_config_class``.
         """
+        super().__init__()
         self._config_class = config_class
-        self._data: dict[str, Any] = {}
 
     # ------------------------------------------------------------------
     # Terminal method

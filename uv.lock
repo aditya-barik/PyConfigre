@@ -340,11 +340,12 @@ wheels = [
 
 [[package]]
 name = "pyconfigre"
-version = "0.3.0"
+version = "0.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
     { name = "pyyaml" },
+    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -366,7 +367,7 @@ toml = [
 [package.metadata]
 requires-dist = [
     { name = "coverage", marker = "extra == 'dev'", specifier = ">=7.13.2,<7.14" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.1,<1.920" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.1,<1.20.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.2,<9.1" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.0.0,<7.1" },
@@ -375,6 +376,7 @@ requires-dist = [
     { name = "tomli", marker = "python_full_version < '3.11' and extra == 'all'", specifier = ">=2.0.0" },
     { name = "tomli", marker = "python_full_version < '3.11' and extra == 'toml'", specifier = ">=2.0.0" },
     { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0.12.20250915,<6.1" },
+    { name = "typing-extensions", specifier = ">=4.0" },
 ]
 provides-extras = ["toml", "all", "dev"]
 

@@ -75,10 +75,12 @@ class ConfigLoader:
             If the file extension is not registered.  The extension is
             validated *before* checking whether the file exists so that
             unsupported-format errors surface immediately.
-        ConfigLoadError
-            If the file cannot be read or parsed.
         ConfigNotFoundError
             If the file does not exist (raised by the individual loader).
+        ConfigLoadError
+            If the file cannot be read or parsed.
+        ConfigValidationError
+            If the parsed content is not a dictionary.
 
         Examples
         --------

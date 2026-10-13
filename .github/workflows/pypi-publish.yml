@@ -40,6 +40,9 @@ jobs:
       is_semver: ${{ steps.check.outputs.is_semver }}
       publish_target: ${{ steps.check.outputs.publish_target }}
     steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v6
+
       - name: Check tag matches v*.*.* pattern
         id: check
         run: |
@@ -53,6 +56,21 @@ jobs:
             echo "is_semver=false" >> "$GITHUB_OUTPUT"
             echo "⚠️ Tag '$TAG' does not match v*.*.* pattern — skipping publish."
           fi
+
+      - name: Verify pyproject.toml version matches tag
+        if: steps.check.outputs.is_semver == 'true'
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          PYPROJECT_VERSION=$(grep -E '^version\s*=' pyproject.toml | head -1 | sed -E 's/^version\s*=\s*"([^"]+)".*/\1/')
+          echo "Release tag version: $VERSION"
+          echo "pyproject.toml version: $PYPROJECT_VERSION"
+          if [ "$PYPROJECT_VERSION" != "$VERSION" ]; then
+            echo "❌ pyproject.toml version ($PYPROJECT_VERSION) does not match release tag ($TAG)"
+            echo "   Update pyproject.toml and src/pyconfigre/__init__.py to $VERSION before releasing."
+            exit 1
+          fi
+          echo "✅ pyproject.toml version matches release tag"
 
   build:
     name: Build Distribution

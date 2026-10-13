@@ -6,7 +6,11 @@ from unittest.mock import patch
 
 import pytest
 
-from pyconfigre.exceptions import ConfigLoadError
+from pyconfigre.exceptions import (
+    ConfigLoadError,
+    ConfigNotFoundError,
+    ConfigValidationError,
+)
 from pyconfigre.loaders import JSONLoader
 
 
@@ -39,7 +43,7 @@ class TestJSONLoader:
         loader = JSONLoader()
         nonexistent_file = temp_dir / "nonexistent.json"
 
-        with pytest.raises(ConfigLoadError, match="File not found"):
+        with pytest.raises(ConfigNotFoundError, match="File not found"):
             loader(nonexistent_file)
 
     def test_json_invalid_syntax(self, temp_dir: Path) -> None:
@@ -71,7 +75,7 @@ class TestJSONLoader:
 
         loader = JSONLoader()
 
-        with pytest.raises(ConfigLoadError, match="not a dictionary"):
+        with pytest.raises(ConfigValidationError, match="not a dictionary"):
             loader(non_dict_file)
 
     def test_json_general_exception_handling(self, temp_dir: Path) -> None:

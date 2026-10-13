@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from ..exceptions import ConfigLoadError
+from ..exceptions import ConfigLoadError, ConfigNotFoundError, ConfigValidationError
 from .base import BaseLoader
 
 # TOML support for Python < 3.11
@@ -48,15 +48,19 @@ class TOMLLoader(BaseLoader):
 
         Raises
         ------
-        ConfigLoadError
-            If file cannot be loaded or parsed.
         ImportError
-            If tomli is not installed (Python < 3.11).
+            If ``tomli`` is not installed (Python < 3.11).
+        ConfigNotFoundError
+            If the file does not exist.
+        ConfigLoadError
+            If the file cannot be read or parsed.
+        ConfigValidationError
+            If the parsed content is not a dictionary.
         """
         if tomllib is None:
             raise ImportError(
                 "TOML support requires 'tomli' package for Python < 3.11. "
-                "Install with: pip install pyconfig[toml]"
+                "Install with: pip install pyconfigre[toml]"
             )
 
         try:
@@ -66,7 +70,7 @@ class TOMLLoader(BaseLoader):
                 data = tomllib.load(f)
                 return self._validate_dict(data)
 
-        except ConfigLoadError:
+        except (ConfigLoadError, ConfigNotFoundError, ConfigValidationError):
             raise
         except Exception as e:
             if "tomllib" in str(type(e)) or "tomli" in str(type(e)):
