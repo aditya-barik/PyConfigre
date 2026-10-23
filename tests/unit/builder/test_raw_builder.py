@@ -251,31 +251,6 @@ class TestRawConfigBuilder:
         finally:
             del os.environ["PRIORITY_DEBUG"]
 
-    def test_get_raw_data(self, yaml_config_file: Path) -> None:
-        """Test that get_raw_data() emits DeprecationWarning and returns
-        the same result as peek().
-
-        ``get_raw_data()`` is a deprecated alias for ``peek()`` as of v0.1.1.
-        This test verifies both that the warning is emitted and that the
-        return value equals peek().
-
-        Parameters
-        ----------
-        yaml_config_file : Path
-            Fixture providing a temporary YAML config file.
-        """
-        raw_config_builder = RawConfigBuilder().from_file(yaml_config_file)
-        raw_peeked = raw_config_builder.peek()
-
-        with pytest.warns(DeprecationWarning, match="get_raw_data\\(\\) is deprecated"):
-            raw_data = raw_config_builder.get_raw_data()
-
-        assert isinstance(raw_data, dict)
-        assert raw_data["app_name"] == "test_application_yaml"
-        assert raw_data["debug"] is True
-        assert raw_data == raw_peeked  # values must be equal
-        assert raw_data is not raw_peeked  # must be a copy, not the same reference
-
     def test_fluent_api_chaining(self, yaml_config_file: Path) -> None:
         """Test fluent API method chaining.
 
@@ -547,45 +522,11 @@ class TestRawConfigBuilderFluentAPI:
         assert raw_config["debug"] is True
         assert raw_config["port"] == 9000
 
-    def test_get_raw_data(self, temp_dir: Path) -> None:
-        """Test get_raw_data emits DeprecationWarning and returns a copy.
-
-        Verifies that:
-        - ``DeprecationWarning`` is emitted on every call
-        - each call returns an independent copy (mutations do not bleed)
-        - the returned data matches the builder's internal state
-
-        Parameters
-        ----------
-        temp_dir : Path
-            Fixture providing a temporary directory.
-        """
-        config_file = temp_dir / "config.json"
-        config_file.write_text('{"port": 3000}')
-
-        raw_config_builder = RawConfigBuilder().from_file(config_file)
-
-        with pytest.warns(DeprecationWarning, match="get_raw_data\\(\\) is deprecated"):
-            raw1 = raw_config_builder.get_raw_data()
-
-        with pytest.warns(DeprecationWarning):
-            raw2 = raw_config_builder.get_raw_data()
-
-        assert raw1 == raw2
-        assert raw1 is not raw2
-
-        raw1["port"] = 9999
-
-        with pytest.warns(DeprecationWarning):
-            raw3 = raw_config_builder.get_raw_data()
-
-        assert raw3["port"] == 3000
-
     def test_peek_returns_copy(self, temp_dir: Path) -> None:
-        """Test that peek() returns a copy equal to get_raw_data().
+        """Test that peek() returns an independent deep copy.
 
-        ``peek()`` is the preferred name; ``get_raw_data()`` is its
-        deprecated alias.  Both must return equal, independent copies.
+        Multiple calls to ``peek()`` must return equal but independent
+        copies — mutations to one must not affect the builder or other copies.
 
         Parameters
         ----------
@@ -597,13 +538,11 @@ class TestRawConfigBuilderFluentAPI:
 
         raw_config_builder = RawConfigBuilder().from_file(config_file)
 
-        raw_peeked = raw_config_builder.peek()
+        copy1 = raw_config_builder.peek()
+        copy2 = raw_config_builder.peek()
 
-        with pytest.warns(DeprecationWarning):
-            raw = raw_config_builder.get_raw_data()
-
-        assert raw_peeked == raw
-        assert raw_peeked is not raw
+        assert copy1 == copy2
+        assert copy1 is not copy2
 
     def test_peek_is_nondestructive(self, temp_dir: Path) -> None:
         """Test that mutating the dict returned by peek() does not affect

@@ -334,28 +334,6 @@ class RawConfigBuilder:
         """
         return copy.deepcopy(self._data)
 
-    # kept for backwards compatibility — peek() is the preferred name
-    def get_raw_data(self) -> dict[str, Any]:
-        """Return assembled data without validation.
-
-        .. deprecated:: 0.1.1
-            :meth:`get_raw_data` is deprecated and will be removed in a future
-            release.  Use :meth:`peek` instead — it is identical in behaviour::
-
-                # Before
-                builder.get_raw_data()
-
-                # After
-                builder.peek()
-        """
-        warnings.warn(
-            "get_raw_data() is deprecated and will be removed in a future release. "
-            "Use peek() instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.peek()
-
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
