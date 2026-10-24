@@ -46,7 +46,7 @@ class TestValidation:
     def test_missing_required_field_raises(self):
         """Omitting a required field (no default) raises ConfigValidationError."""
         with pytest.raises(
-            ConfigValidationError, match="Configuration validation failed"
+            ConfigValidationError, match="Missing required fields"
         ):
             # DatabaseConfig.name is required — no default
             ConfigBuilder(DatabaseConfig).from_dict(
@@ -229,7 +229,7 @@ class TestDataClassValidation:
     def test_missing_required_field_raises(self):
         """A required dataclass field missing from data raises ConfigValidationError."""
         with pytest.raises(
-            ConfigValidationError, match="Configuration validation failed"
+            ConfigValidationError, match="Missing required fields"
         ):
             # DatabaseConfigDC.name is required — no default
             DataClassConfigBuilder(DatabaseConfigDC).from_dict(

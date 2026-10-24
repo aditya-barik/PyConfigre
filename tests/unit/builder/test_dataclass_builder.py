@@ -320,7 +320,7 @@ class TestDataClassConfigBuilderErrors:
         without providing it must raise ConfigValidationError.
         """
         with pytest.raises(
-            ConfigValidationError, match="Configuration validation failed"
+            ConfigValidationError, match="Missing required fields"
         ):
             DataClassConfigBuilder(RequiredFieldConfig).build()
 
@@ -505,3 +505,26 @@ class TestDataClassConfigBuilderFluentAPI:
 
         assert isinstance(result, dict)
         assert result["port"] == 5000
+
+
+class TestMissingFieldsDataClass:
+    """Tests for missing_fields on DataClassConfigBuilder."""
+
+    def test_missing_fields_inferred_from_dataclass(self) -> None:
+        """Required dataclass fields (no default) are auto-detected."""
+        builder = DataClassConfigBuilder(
+            RequiredFieldConfig, missing_fields="forbid"
+        ).from_dict({"port": 9000})
+
+        with pytest.raises(ConfigValidationError, match="app_name"):
+            builder.build()
+
+    def test_missing_fields_with_defaults_no_false_positive(self) -> None:
+        """Fields with defaults are not flagged as missing."""
+        config = (
+            DataClassConfigBuilder(FlatConfig, missing_fields="forbid")
+            .from_dict({"app_name": "test"})
+            .build()
+        )
+        assert config.app_name == "test"
+        assert config.port == 8080

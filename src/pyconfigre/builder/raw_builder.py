@@ -15,7 +15,7 @@ from typing_extensions import Self
 from ..exceptions import ConfigLoadError, ConfigNotFoundError, ConfigValidationError
 from ..loaders import ConfigLoader
 from ._merge import _deep_merge
-from ._validation import _handle_unknown
+from ._validation import _handle_missing, _handle_unknown
 
 
 class RawConfigBuilder:
@@ -58,6 +58,8 @@ class RawConfigBuilder:
         *,
         unknown_fields: Literal["ignore", "warn", "forbid"] = "warn",
         expected_keys: set[str] | None = None,
+        missing_fields: Literal["ignore", "warn", "forbid"] = "forbid",
+        required_keys: set[str] | None = None,
     ) -> None:
         """Initialise an empty pipeline with no sources.
 
@@ -69,10 +71,19 @@ class RawConfigBuilder:
         expected_keys : set[str] | None, optional
             If provided, the set of allowed top-level keys.  Keys outside
             this set are handled according to *unknown_fields*.
+        missing_fields : {"ignore", "warn", "forbid"}, default "forbid"
+            How to handle keys in *required_keys* that are absent from
+            the assembled data at ``build_dict()`` time.  Only effective
+            when *required_keys* is provided.
+        required_keys : set[str] | None, optional
+            If provided, the set of keys that must be present.  Missing
+            keys are handled according to *missing_fields*.
         """
         self._data: dict[str, Any] = {}
         self._unknown_fields = unknown_fields
         self._expected_keys = expected_keys
+        self._missing_fields = missing_fields
+        self._required_keys = required_keys
 
     # ------------------------------------------------------------------
     # Source methods
@@ -333,6 +344,10 @@ class RawConfigBuilder:
                 .build_dict()
             )
         """
+        if self._required_keys is not None:
+            missing = self._required_keys - set(self._data)
+            if missing:
+                _handle_missing(missing, self._missing_fields)
         if self._expected_keys is not None:
             extra = set(self._data) - self._expected_keys
             if extra:

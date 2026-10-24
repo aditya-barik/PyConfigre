@@ -684,3 +684,56 @@ class TestUnknownFieldsRaw:
 
         result = builder.build_dict()
         assert result == {"host": "localhost", "port": 5432}
+
+
+class TestMissingFieldsRaw:
+    """Tests for missing_fields on RawConfigBuilder."""
+
+    def test_missing_fields_forbid(self) -> None:
+        """Missing required keys raise ConfigValidationError."""
+        builder = RawConfigBuilder(
+            missing_fields="forbid",
+            required_keys={"database_url", "secret_key"},
+        ).from_dict({"database_url": "postgres://localhost/db"})
+
+        with pytest.raises(ConfigValidationError, match="secret_key"):
+            builder.build_dict()
+
+    def test_missing_fields_warn(self) -> None:
+        """Missing required keys emit UserWarning."""
+        builder = RawConfigBuilder(
+            missing_fields="warn",
+            required_keys={"database_url", "secret_key"},
+        ).from_dict({"database_url": "postgres://localhost/db"})
+
+        with pytest.warns(UserWarning, match="secret_key"):
+            builder.build_dict()
+
+    def test_missing_fields_ignore(self) -> None:
+        """Missing required keys pass through when mode is 'ignore'."""
+        result = (
+            RawConfigBuilder(
+                missing_fields="ignore",
+                required_keys={"database_url", "secret_key"},
+            )
+            .from_dict({"database_url": "postgres://localhost/db"})
+            .build_dict()
+        )
+        assert result == {"database_url": "postgres://localhost/db"}
+
+    def test_missing_fields_no_false_positive(self) -> None:
+        """No error when all required keys are present."""
+        result = (
+            RawConfigBuilder(
+                missing_fields="forbid",
+                required_keys={"host", "port"},
+            )
+            .from_dict({"host": "localhost", "port": 5432})
+            .build_dict()
+        )
+        assert result == {"host": "localhost", "port": 5432}
+
+    def test_missing_fields_no_required_keys_skips_check(self) -> None:
+        """When required_keys is None, no missing-fields check is performed."""
+        result = RawConfigBuilder(missing_fields="forbid").from_dict({}).build_dict()
+        assert result == {}

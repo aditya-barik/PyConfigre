@@ -112,7 +112,11 @@ class TestENVLoading:
             T_RATIO="3.14",
             T_API_KEY="null",
         ):
-            config = ConfigBuilder(SimpleConfig).from_env("T_").build()
+            config = (
+                ConfigBuilder(SimpleConfig, unknown_fields="ignore")
+                .from_env("T_")
+                .build()
+            )
 
         assert config.name == "type-test"
         assert config.debug is True

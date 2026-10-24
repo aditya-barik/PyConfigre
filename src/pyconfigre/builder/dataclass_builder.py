@@ -70,6 +70,15 @@ class DataClassConfigBuilder(RawConfigBuilder, Generic[D]):
         - ``"warn"`` — emit a ``UserWarning`` listing the ignored keys.
         - ``"forbid"`` — raise :exc:`ConfigValidationError` for extra keys.
 
+    missing_fields : {"ignore", "warn", "forbid"}, default "forbid"
+        How to handle required dataclass fields (no default) that are absent
+        from the merged data.
+
+        - ``"ignore"`` — let the dataclass raise its own ``TypeError``.
+        - ``"warn"`` — emit a ``UserWarning`` listing the missing fields.
+        - ``"forbid"`` — raise :exc:`ConfigValidationError` with an
+          actionable message listing the missing fields.
+
     Raises
     ------
     TypeError
@@ -120,6 +129,7 @@ class DataClassConfigBuilder(RawConfigBuilder, Generic[D]):
         self,
         schema: type[D],
         unknown_fields: Literal["ignore", "warn", "forbid"] = "warn",
+        missing_fields: Literal["ignore", "warn", "forbid"] = "forbid",
     ) -> None:
         """
         Initialise the builder with a dataclass schema.
@@ -131,6 +141,8 @@ class DataClassConfigBuilder(RawConfigBuilder, Generic[D]):
             private attribute ``_schema``.
         unknown_fields : {"ignore", "warn", "forbid"}, default "warn"
             Controls how unexpected keys in the merged config data are handled.
+        missing_fields : {"ignore", "warn", "forbid"}, default "forbid"
+            Controls how absent required fields are handled.
 
         Raises
         ------
@@ -149,9 +161,12 @@ class DataClassConfigBuilder(RawConfigBuilder, Generic[D]):
                 f"unknown_fields must be one of {_UNKNOWN_FIELDS_MODES!r}, "
                 f"got {unknown_fields!r}"
             )
-        super().__init__()
+        super().__init__(
+            unknown_fields=unknown_fields, missing_fields=missing_fields
+        )
         self._schema: type[D] = schema
-        self._unknown_fields: str = unknown_fields
+        self._unknown_fields: Literal["ignore", "warn", "forbid"] = unknown_fields
+        self._missing_fields_mode: Literal["ignore", "warn", "forbid"] = missing_fields
 
     # ------------------------------------------------------------------
     # Terminal method
@@ -185,6 +200,18 @@ class DataClassConfigBuilder(RawConfigBuilder, Generic[D]):
             config = DataClassConfigBuilder(AppConfig).from_file("app.yaml").build()
             print(config.port)
         """
+        required = {
+            f.name
+            for f in dataclasses.fields(self._schema)  # type: ignore[arg-type]
+            if f.default is dataclasses.MISSING
+            and f.default_factory is dataclasses.MISSING
+        }
+        missing = required - set(self._data)
+        if missing:
+            from ._validation import _handle_missing
+
+            _handle_missing(missing, self._missing_fields_mode)
+
         try:
             return cast(
                 D,

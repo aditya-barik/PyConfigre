@@ -66,6 +66,7 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
         config_class: type[T],
         *,
         unknown_fields: Literal["ignore", "warn", "forbid"] = "warn",
+        missing_fields: Literal["ignore", "warn", "forbid"] = "forbid",
     ) -> None:
         """
         Initialise the builder with a Pydantic schema class.
@@ -80,8 +81,14 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
             How to handle keys in the merged data that are not fields of
             the Pydantic model.  Checked at ``build()`` time before
             Pydantic validation.
+        missing_fields : {"ignore", "warn", "forbid"}, default "forbid"
+            How to handle required model fields that are absent from
+            the assembled data.  Checked at ``build()`` time before
+            Pydantic validation.
         """
-        super().__init__(unknown_fields=unknown_fields)
+        super().__init__(
+            unknown_fields=unknown_fields, missing_fields=missing_fields
+        )
         self._config_class = config_class
 
     # ------------------------------------------------------------------
@@ -112,9 +119,19 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
         """
         model_fields = set(self._config_class.model_fields)
 
+        required = {
+            name
+            for name, field_info in self._config_class.model_fields.items()
+            if field_info.is_required()
+        }
+        missing = required - set(self._data)
+        if missing:
+            _handle_missing(missing, self._missing_fields)
+
         extra = set(self._data) - model_fields
         if extra:
             _handle_unknown(extra, self._unknown_fields)
+
         try:
             return self._config_class.model_validate(self._data)
         except ValidationError as e:

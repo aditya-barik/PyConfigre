@@ -341,3 +341,25 @@ class TestUnknownFieldsConfigBuilder:
         )
         with pytest.raises(ConfigValidationError, match="extra_key"):
             builder.build()
+
+
+class TestMissingFieldsConfigBuilder:
+    """Tests for missing_fields on ConfigBuilder."""
+
+    def test_missing_fields_inferred_from_model(self) -> None:
+        """Required Pydantic fields are auto-detected and checked."""
+        builder = ConfigBuilder(ComplexConfig, missing_fields="forbid").from_dict(
+            {"port": 9000}
+        )
+        with pytest.raises(ConfigValidationError, match="app_name"):
+            builder.build()
+
+    def test_missing_fields_with_defaults_no_false_positive(self) -> None:
+        """Fields with defaults are not flagged as missing."""
+        config = (
+            ConfigBuilder(SimpleConfig, missing_fields="forbid")
+            .from_dict({"app_name": "test"})
+            .build()
+        )
+        assert config.app_name == "test"
+        assert config.port == 8000
