@@ -7,11 +7,21 @@ Provides :class:`ConfigBuilder` — extends :class:`RawConfigBuilder` with
 
 from typing import Generic, Literal, TypeVar
 
-from pydantic import BaseModel, ValidationError
-
 from ..exceptions import ConfigValidationError
 from ._validation import _handle_missing, _handle_unknown
 from .raw_builder import RawConfigBuilder
+
+try:
+    from pydantic import BaseModel, ValidationError
+
+    _HAS_PYDANTIC = True
+except ImportError:  # pragma: no cover
+    _HAS_PYDANTIC = False
+
+    class BaseModel:  # type: ignore[no-redef]
+        """Placeholder when Pydantic is not installed."""
+
+    ValidationError = Exception  # type: ignore[assignment,misc]
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -86,6 +96,11 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
             the assembled data.  Checked at ``build()`` time before
             Pydantic validation.
         """
+        if not _HAS_PYDANTIC:
+            raise ImportError(
+                "ConfigBuilder requires pydantic. "
+                "Install with: pip install pyconfigre[pydantic]"
+            )
         super().__init__(
             unknown_fields=unknown_fields, missing_fields=missing_fields
         )

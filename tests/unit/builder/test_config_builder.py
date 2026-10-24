@@ -363,3 +363,24 @@ class TestMissingFieldsConfigBuilder:
         )
         assert config.app_name == "test"
         assert config.port == 8000
+
+
+class TestPydanticOptional:
+    """Tests for Pydantic-optional behaviour."""
+
+    def test_config_builder_import_error_without_pydantic(self) -> None:
+        """ConfigBuilder raises ImportError when Pydantic is not installed."""
+        import pyconfigre.builder.config_builder as cb_mod
+
+        original = cb_mod._HAS_PYDANTIC
+        try:
+            cb_mod._HAS_PYDANTIC = False
+            with pytest.raises(ImportError, match="pyconfigre\\[pydantic\\]"):
+                ConfigBuilder(SimpleConfig)
+        finally:
+            cb_mod._HAS_PYDANTIC = original
+
+    def test_raw_builder_works_without_pydantic(self) -> None:
+        """RawConfigBuilder does not import or require Pydantic."""
+        result = RawConfigBuilder().from_dict({"key": "value"}).build_dict()
+        assert result == {"key": "value"}
