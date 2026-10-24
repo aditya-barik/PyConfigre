@@ -10,7 +10,7 @@ from typing import Generic, TypeVar
 from pydantic import BaseModel, ValidationError
 
 from ..exceptions import ConfigValidationError
-from ._validation import _handle_unknown
+from ._validation import _handle_missing, _handle_unknown
 from .raw_builder import RawConfigBuilder
 
 T = TypeVar("T", bound=BaseModel)
