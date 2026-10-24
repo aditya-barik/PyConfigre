@@ -12,7 +12,11 @@ from unittest import mock
 import pytest
 
 from pyconfigre import RawConfigBuilder
-from pyconfigre.exceptions import ConfigLoadError, ConfigNotFoundError
+from pyconfigre.exceptions import (
+    ConfigLoadError,
+    ConfigNotFoundError,
+    ConfigValidationError,
+)
 
 # —— RawConfigBuilder (Parent-class) Tests ————————————————————————————————————————————
 
