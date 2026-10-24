@@ -15,6 +15,7 @@ from typing_extensions import Self
 from ..exceptions import ConfigLoadError, ConfigNotFoundError, ConfigValidationError
 from ..loaders import ConfigLoader
 from ._merge import _deep_merge
+from ._validation import _handle_unknown
 
 
 class RawConfigBuilder:
@@ -52,9 +53,26 @@ class RawConfigBuilder:
         config = builder.build_dict()
     """
 
-    def __init__(self) -> None:
-        """Initialise an empty pipeline with no sources."""
+    def __init__(
+        self,
+        *,
+        unknown_fields: Literal["ignore", "warn", "forbid"] = "warn",
+        expected_keys: set[str] | None = None,
+    ) -> None:
+        """Initialise an empty pipeline with no sources.
+
+        Parameters
+        ----------
+        unknown_fields : {"ignore", "warn", "forbid"}, default "warn"
+            How to handle keys not in *expected_keys* at ``build_dict()``
+            time.  Only effective when *expected_keys* is provided.
+        expected_keys : set[str] | None, optional
+            If provided, the set of allowed top-level keys.  Keys outside
+            this set are handled according to *unknown_fields*.
+        """
         self._data: dict[str, Any] = {}
+        self._unknown_fields = unknown_fields
+        self._expected_keys = expected_keys
 
     # ------------------------------------------------------------------
     # Source methods
@@ -299,6 +317,11 @@ class RawConfigBuilder:
         dict[str, Any]
             The assembled configuration dictionary.
 
+        Raises
+        ------
+        ConfigValidationError
+            If *unknown_fields* is ``"forbid"`` and extra keys are present.
+
         Examples
         --------
         ::
@@ -310,6 +333,10 @@ class RawConfigBuilder:
                 .build_dict()
             )
         """
+        if self._expected_keys is not None:
+            extra = set(self._data) - self._expected_keys
+            if extra:
+                _handle_unknown(extra, self._unknown_fields)
         return copy.deepcopy(self._data)
 
     def peek(self) -> dict[str, Any]:

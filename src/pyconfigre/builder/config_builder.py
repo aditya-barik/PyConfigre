@@ -10,6 +10,7 @@ from typing import Generic, TypeVar
 from pydantic import BaseModel, ValidationError
 
 from ..exceptions import ConfigValidationError
+from ._validation import _handle_unknown
 from .raw_builder import RawConfigBuilder
 
 T = TypeVar("T", bound=BaseModel)
@@ -60,7 +61,12 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
         )
     """
 
-    def __init__(self, config_class: type[T]) -> None:
+    def __init__(
+        self,
+        config_class: type[T],
+        *,
+        unknown_fields: Literal["ignore", "warn", "forbid"] = "warn",
+    ) -> None:
         """
         Initialise the builder with a Pydantic schema class.
 
@@ -70,8 +76,12 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
             Pydantic ``BaseModel`` subclass used to validate the assembled
             configuration when :meth:`build` is called.  Stored internally
             as the private attribute ``_config_class``.
+        unknown_fields : {"ignore", "warn", "forbid"}, default "warn"
+            How to handle keys in the merged data that are not fields of
+            the Pydantic model.  Checked at ``build()`` time before
+            Pydantic validation.
         """
-        super().__init__()
+        super().__init__(unknown_fields=unknown_fields)
         self._config_class = config_class
 
     # ------------------------------------------------------------------
@@ -100,6 +110,11 @@ class ConfigBuilder(RawConfigBuilder, Generic[T]):
             config = ConfigBuilder(AppConfig).from_file("app.yaml").build()
             print(config.port)
         """
+        model_fields = set(self._config_class.model_fields)
+
+        extra = set(self._data) - model_fields
+        if extra:
+            _handle_unknown(extra, self._unknown_fields)
         try:
             return self._config_class.model_validate(self._data)
         except ValidationError as e:

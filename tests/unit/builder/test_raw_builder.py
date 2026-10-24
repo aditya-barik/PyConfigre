@@ -629,3 +629,58 @@ class TestRawConfigBuilderFluentAPI:
 
         assert first == second
         assert first is not second
+
+
+class TestUnknownFieldsRaw:
+    """Tests for unknown_fields on RawConfigBuilder."""
+
+    def test_unknown_fields_ignore(self) -> None:
+        """Extra keys are silently accepted when unknown_fields='ignore'."""
+        result = (
+            RawConfigBuilder(
+                unknown_fields="ignore",
+                expected_keys={"host", "port"},
+            )
+            .from_dict({"host": "localhost", "port": 5432, "extra": "value"})
+            .build_dict()
+        )
+        assert result["extra"] == "value"
+
+    def test_unknown_fields_warn(self) -> None:
+        """Extra keys emit UserWarning when unknown_fields='warn'."""
+        builder = RawConfigBuilder(
+            unknown_fields="warn",
+            expected_keys={"host", "port"},
+        ).from_dict({"host": "localhost", "port": 5432, "typo_key": "oops"})
+
+        with pytest.warns(UserWarning, match="typo_key"):
+            builder.build_dict()
+
+    def test_unknown_fields_forbid(self) -> None:
+        """Extra keys raise ConfigValidationError when unknown_fields='forbid'."""
+        builder = RawConfigBuilder(
+            unknown_fields="forbid",
+            expected_keys={"host", "port"},
+        ).from_dict({"host": "localhost", "port": 5432, "typo_key": "oops"})
+
+        with pytest.raises(ConfigValidationError, match="typo_key"):
+            builder.build_dict()
+
+    def test_unknown_fields_no_expected_keys_skips_check(self) -> None:
+        """When expected_keys is None, no unknown-fields check is performed."""
+        result = (
+            RawConfigBuilder(unknown_fields="forbid")
+            .from_dict({"anything": "goes"})
+            .build_dict()
+        )
+        assert result["anything"] == "goes"
+
+    def test_unknown_fields_no_false_positive(self) -> None:
+        """No warning or error when all keys match expected_keys."""
+        builder = RawConfigBuilder(
+            unknown_fields="forbid",
+            expected_keys={"host", "port"},
+        ).from_dict({"host": "localhost", "port": 5432})
+
+        result = builder.build_dict()
+        assert result == {"host": "localhost", "port": 5432}

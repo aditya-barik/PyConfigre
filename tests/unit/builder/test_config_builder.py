@@ -312,3 +312,32 @@ class TestBuilderInheritance:
         assert isinstance(config_builder, dict)
         assert config_builder["app_name"] == "inherited"
         assert config_builder["port"] == 5000
+
+
+class TestUnknownFieldsConfigBuilder:
+    """Tests for unknown_fields on ConfigBuilder."""
+
+    def test_unknown_fields_against_model_ignore(self) -> None:
+        """Extra keys are silently accepted when unknown_fields='ignore'."""
+        config = (
+            ConfigBuilder(SimpleConfig, unknown_fields="ignore")
+            .from_dict({"app_name": "test", "extra_key": "value"})
+            .build()
+        )
+        assert config.app_name == "test"
+
+    def test_unknown_fields_against_model_warn(self) -> None:
+        """Extra keys emit UserWarning when unknown_fields='warn'."""
+        builder = ConfigBuilder(SimpleConfig, unknown_fields="warn").from_dict(
+            {"app_name": "test", "extra_key": "value"}
+        )
+        with pytest.warns(UserWarning, match="extra_key"):
+            builder.build()
+
+    def test_unknown_fields_against_model_forbid(self) -> None:
+        """Extra keys raise ConfigValidationError when unknown_fields='forbid'."""
+        builder = ConfigBuilder(SimpleConfig, unknown_fields="forbid").from_dict(
+            {"app_name": "test", "extra_key": "value"}
+        )
+        with pytest.raises(ConfigValidationError, match="extra_key"):
+            builder.build()
