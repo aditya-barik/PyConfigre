@@ -8,7 +8,7 @@ and priority logic.  No schema or validation framework is required.
 import copy
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from typing_extensions import Self
 
