@@ -741,3 +741,101 @@ class TestMissingFieldsRaw:
         """When required_keys is None, no missing-fields check is performed."""
         result = RawConfigBuilder(missing_fields="forbid").from_dict({}).build_dict()
         assert result == {}
+
+
+class TestFromEnvLayer:
+    """Tests for from_env_layer() on RawConfigBuilder."""
+
+    def test_from_env_layer_loads_base(self, temp_dir: Path) -> None:
+        """Base file is loaded when present."""
+        (temp_dir / "base.yaml").write_text("host: base-host\n")
+
+        result = RawConfigBuilder().from_env_layer(temp_dir).build_dict()
+        assert result["host"] == "base-host"
+
+    def test_from_env_layer_loads_env_specific(self, temp_dir: Path) -> None:
+        """Environment-specific file is loaded and overrides base."""
+        (temp_dir / "base.yaml").write_text("host: base-host\nport: 8000\n")
+        (temp_dir / "production.yaml").write_text("host: prod-host\n")
+
+        os.environ["TEST_ENV_LAYER"] = "production"
+        try:
+            result = (
+                RawConfigBuilder()
+                .from_env_layer(temp_dir, env_var="TEST_ENV_LAYER")
+                .build_dict()
+            )
+        finally:
+            del os.environ["TEST_ENV_LAYER"]
+
+        assert result["host"] == "prod-host"
+        assert result["port"] == 8000
+
+    def test_from_env_layer_missing_files_skipped(self, temp_dir: Path) -> None:
+        """Missing files are silently skipped (all loaded as optional)."""
+        result = RawConfigBuilder().from_env_layer(temp_dir).build_dict()
+        assert result == {}
+
+    def test_from_env_layer_local_override_priority(self, temp_dir: Path) -> None:
+        """Local file overrides base and env-specific files."""
+        (temp_dir / "base.yaml").write_text("host: base-host\n")
+        (temp_dir / "development.yaml").write_text("host: dev-host\n")
+        (temp_dir / "local.yaml").write_text("host: local-host\n")
+
+        result = RawConfigBuilder().from_env_layer(temp_dir).build_dict()
+        assert result["host"] == "local-host"
+
+    def test_from_env_layer_custom_env_var(self, temp_dir: Path) -> None:
+        """Custom env_var name is respected."""
+        (temp_dir / "staging.yaml").write_text("env: staging\n")
+
+        os.environ["MY_DEPLOY_ENV"] = "staging"
+        try:
+            result = (
+                RawConfigBuilder()
+                .from_env_layer(temp_dir, env_var="MY_DEPLOY_ENV")
+                .build_dict()
+            )
+        finally:
+            del os.environ["MY_DEPLOY_ENV"]
+
+        assert result["env"] == "staging"
+
+    def test_from_env_layer_custom_names(self, temp_dir: Path) -> None:
+        """Custom base_name and local_name are respected."""
+        (temp_dir / "defaults.yaml").write_text("mode: default\n")
+        (temp_dir / "overrides.yaml").write_text("mode: override\n")
+
+        result = (
+            RawConfigBuilder()
+            .from_env_layer(
+                temp_dir, base_name="defaults", local_name="overrides"
+            )
+            .build_dict()
+        )
+        assert result["mode"] == "override"
+
+    def test_from_env_layer_custom_extension(self, temp_dir: Path) -> None:
+        """Custom extension is respected."""
+        (temp_dir / "base.json").write_text('{"format": "json"}')
+
+        result = (
+            RawConfigBuilder()
+            .from_env_layer(temp_dir, extension=".json")
+            .build_dict()
+        )
+        assert result["format"] == "json"
+
+    def test_from_env_layer_default_env_when_unset(self, temp_dir: Path) -> None:
+        """Default env value is used when the env var is not set."""
+        (temp_dir / "development.yaml").write_text("env: dev\n")
+
+        os.environ.pop("NONEXISTENT_ENV_VAR_XYZ", None)
+        result = (
+            RawConfigBuilder()
+            .from_env_layer(
+                temp_dir, env_var="NONEXISTENT_ENV_VAR_XYZ", default="development"
+            )
+            .build_dict()
+        )
+        assert result["env"] == "dev"

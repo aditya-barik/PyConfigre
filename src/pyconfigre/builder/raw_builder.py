@@ -6,6 +6,7 @@ and priority logic.  No schema or validation framework is required.
 """
 
 import copy
+import os
 import warnings
 from pathlib import Path
 from typing import Any, Literal
@@ -375,6 +376,71 @@ class RawConfigBuilder:
             config = builder.from_env("MYAPP_").build_dict()
         """
         return copy.deepcopy(self._data)
+
+    # ------------------------------------------------------------------
+    # Convenience methods
+    # ------------------------------------------------------------------
+
+    def from_env_layer(
+        self,
+        directory: str | Path,
+        *,
+        env_var: str = "ENV",
+        default: str = "development",
+        base_name: str = "base",
+        local_name: str = "local",
+        extension: str = ".yaml",
+    ) -> Self:
+        """
+        Load environment-layered configuration files from a directory.
+
+        Loads three files in order (all optional):
+        ``{base_name}{extension}`` → ``{env_value}{extension}`` →
+        ``{local_name}{extension}``.
+
+        The environment value is read from ``os.environ[env_var]``,
+        falling back to *default* if the variable is not set.
+
+        Parameters
+        ----------
+        directory : str | Path
+            Directory containing the layered config files.
+        env_var : str, optional
+            Environment variable name to read.  Default is ``"ENV"``.
+        default : str, optional
+            Default environment name if *env_var* is not set.
+            Default is ``"development"``.
+        base_name : str, optional
+            Base config filename stem.  Default is ``"base"``.
+        local_name : str, optional
+            Local override filename stem.  Default is ``"local"``.
+        extension : str, optional
+            File extension including the dot.  Default is ``".yaml"``.
+
+        Returns
+        -------
+        Self
+            ``self``, for method chaining.
+
+        Examples
+        --------
+        ::
+
+            config = (
+                RawConfigBuilder()
+                .from_env_layer("config/", env_var="ENV", default="development")
+                .from_env("MYAPP_")
+                .build_dict()
+            )
+            # Loads: config/base.yaml → config/{ENV}.yaml → config/local.yaml
+        """
+        directory = Path(directory)
+        env_value = os.getenv(env_var, default)
+        return (
+            self.from_file(directory / f"{base_name}{extension}", optional=True)
+            .from_file(directory / f"{env_value}{extension}", optional=True)
+            .from_file(directory / f"{local_name}{extension}", optional=True)
+        )
 
     # ------------------------------------------------------------------
     # Private helpers
