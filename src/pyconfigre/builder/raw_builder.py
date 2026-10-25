@@ -7,7 +7,6 @@ and priority logic.  No schema or validation framework is required.
 
 import copy
 import os
-import warnings
 from pathlib import Path
 from typing import Any, Literal
 
@@ -90,7 +89,9 @@ class RawConfigBuilder:
     # Source methods
     # ------------------------------------------------------------------
 
-    def from_file(self, path: str | Path, optional: bool = False) -> Self:
+    def from_file(
+        self, path: str | Path, optional: bool = False, when: Any = None
+    ) -> Self:
         """
         Load configuration from a file, auto-detecting the format.
 
@@ -136,6 +137,12 @@ class RawConfigBuilder:
                 .build_dict()
             )
         """
+        if when is not None:
+            from ..conditions import _evaluate_condition
+
+            if not _evaluate_condition(when):
+                return self
+
         path = Path(path)
 
         # Validate the extension first — gives a clear error even if the file
@@ -166,6 +173,7 @@ class RawConfigBuilder:
         lowercase: bool = True,
         strip_prefix: bool = True,
         nested: bool = True,
+        when: Any = None,
     ) -> Self:
         """
         Load configuration from environment variables.
@@ -218,6 +226,12 @@ class RawConfigBuilder:
             RawConfigBuilder().from_env("MYAPP__", nested=False).build_dict()
             # Keys with __ are kept flat: {"database__host": "localhost"}
         """
+        if when is not None:
+            from ..conditions import _evaluate_condition
+
+            if not _evaluate_condition(when):
+                return self
+
         loader = ConfigLoader.get_loader("env")
         data = loader(
             prefix=prefix,
@@ -228,7 +242,7 @@ class RawConfigBuilder:
         self._merge(data)
         return self
 
-    def from_dict(self, data: dict[str, Any]) -> Self:
+    def from_dict(self, data: dict[str, Any], when: Any = None) -> Self:
         """
         Merge a plain dictionary into the configuration.
 
@@ -253,10 +267,16 @@ class RawConfigBuilder:
                 .build_dict()
             )
         """
+        if when is not None:
+            from ..conditions import _evaluate_condition
+
+            if not _evaluate_condition(when):
+                return self
+
         self._merge(data)
         return self
 
-    def set(self, key: str, value: Any) -> Self:
+    def set(self, key: str, value: Any, when: Any = None) -> Self:
         """
         Set a single configuration value, optionally using dot notation.
 
@@ -291,6 +311,12 @@ class RawConfigBuilder:
                 .build_dict()
             )
         """
+        if when is not None:
+            from ..conditions import _evaluate_condition
+
+            if not _evaluate_condition(when):
+                return self
+
         if "." not in key:
             self._data[key] = value
             return self
@@ -390,6 +416,7 @@ class RawConfigBuilder:
         base_name: str = "base",
         local_name: str = "local",
         extension: str = ".yaml",
+        when: Any = None,
     ) -> Self:
         """
         Load environment-layered configuration files from a directory.
@@ -416,6 +443,8 @@ class RawConfigBuilder:
             Local override filename stem.  Default is ``"local"``.
         extension : str, optional
             File extension including the dot.  Default is ``".yaml"``.
+        when : callable | tuple | None, optional
+            Condition to evaluate.  If ``False``, skip this source.
 
         Returns
         -------
@@ -434,6 +463,12 @@ class RawConfigBuilder:
             )
             # Loads: config/base.yaml → config/{ENV}.yaml → config/local.yaml
         """
+        if when is not None:
+            from ..conditions import _evaluate_condition
+
+            if not _evaluate_condition(when):
+                return self
+
         directory = Path(directory)
         env_value = os.getenv(env_var, default)
         return (
