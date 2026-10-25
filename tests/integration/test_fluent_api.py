@@ -2,9 +2,9 @@
 Use case: fluent API ergonomics.
 
 These tests treat ConfigBuilder as a user would — chaining methods, using
-set() with dot notation, inspecting state mid-chain with peek(), and
-exercising the get_raw_data() deprecation path. They verify that the API
-is composable, non-destructive, and gives clear errors when misused.
+set() with dot notation, and inspecting state mid-chain with peek(). They
+verify that the API is composable, non-destructive, and gives clear errors
+when misused.
 """
 
 import pytest
@@ -111,18 +111,6 @@ class TestFluentAPI:
         assert "name.sub" in message  # full path
         assert "name" in message  # offending segment
         assert "str" in message  # actual type
-
-    def test_get_raw_data_emits_deprecation_warning(self, cfg_dir):
-        """get_raw_data() is a deprecated alias for peek() and must warn."""
-        f = cfg_dir / "app.yaml"
-        f.write_text("name: deprecated-test\n")
-
-        builder = ConfigBuilder(SimpleConfig).from_file(f)
-
-        with pytest.warns(DeprecationWarning, match="get_raw_data\\(\\) is deprecated"):
-            raw = builder.get_raw_data()
-
-        assert raw["name"] == "deprecated-test"
 
     def test_builder_is_reusable_after_peek(self, cfg_dir):
         """A builder can have sources added after peek() is called.
