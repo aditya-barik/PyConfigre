@@ -56,24 +56,34 @@ Inspect assembled data before validating::
 from importlib.metadata import PackageNotFoundError, version
 
 from .builder import ConfigBuilder, DataClassConfigBuilder, RawConfigBuilder
+from .conditions import env_in, env_is, when_all, when_any
+from .directory import ConfigNamespace, load_directory
 from .exceptions import (
     ConfigError,
     ConfigLoadError,
     ConfigNotFoundError,
     ConfigValidationError,
 )
+from .schema import infer_schema
 
 try:
     __version__ = version("pyconfigre")
 except PackageNotFoundError:  # pragma: no cover
-    __version__ = "0.3.1"
+    __version__ = "0.4.0"
 
 __all__ = [
     "ConfigBuilder",
+    "ConfigNamespace",
     "DataClassConfigBuilder",
     "RawConfigBuilder",
     "ConfigError",
     "ConfigLoadError",
     "ConfigNotFoundError",
     "ConfigValidationError",
+    "env_in",
+    "env_is",
+    "infer_schema",
+    "load_directory",
+    "when_all",
+    "when_any",
 ]
