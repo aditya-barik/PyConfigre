@@ -477,6 +477,56 @@ class RawConfigBuilder:
             .from_file(directory / f"{local_name}{extension}", optional=True)
         )
 
+    def from_directory(
+        self,
+        path: str | Path,
+        *,
+        recursive: bool = True,
+        skip_hidden: bool = True,
+        unknown_extensions: Literal["skip", "raise"] = "skip",
+        when: Any = None,
+    ) -> Self:
+        """
+        Load all config files from a directory and merge into the pipeline.
+
+        Each file's contents are merged under a key named after the file
+        stem (e.g. ``database.yaml`` → ``{"database": {...}}``).
+
+        Parameters
+        ----------
+        path : str | Path
+            Directory to load from.
+        recursive : bool, optional
+            Whether to search subdirectories.  Default is ``True``.
+        skip_hidden : bool, optional
+            Skip files starting with ``.``.  Default is ``True``.
+        unknown_extensions : {"skip", "raise"}, optional
+            How to handle unsupported file extensions.  Default is ``"skip"``.
+        when : callable | tuple | None, optional
+            Condition to evaluate.  If ``False``, skip this source.
+
+        Returns
+        -------
+        Self
+            ``self``, for method chaining.
+        """
+        if when is not None:
+            from ..conditions import _evaluate_condition
+
+            if not _evaluate_condition(when):
+                return self
+
+        from ..directory import load_directory
+
+        ns = load_directory(
+            path,
+            recursive=recursive,
+            skip_hidden=skip_hidden,
+            unknown_extensions=unknown_extensions,
+        )
+        self._merge(ns.to_dict())
+        return self
+
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
