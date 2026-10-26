@@ -301,3 +301,68 @@ class TestDataClassValidation:
                 )
                 .build()
             )
+
+    def test_missing_fields_forbid_by_default(self):
+        """missing_fields='forbid' (default) raises for missing required fields."""
+        with pytest.raises(
+            ConfigValidationError, match="Missing required fields"
+        ):
+            DataClassConfigBuilder(DatabaseConfigDC).from_dict(
+                {"host": "localhost", "username": "user", "password": "pass"}
+            ).build()
+
+    def test_missing_fields_warn(self):
+        """missing_fields='warn' emits a warning, then schema validation fails."""
+        with pytest.warns(UserWarning, match="Missing required fields"):
+            with pytest.raises(
+                ConfigValidationError, match="Configuration validation failed"
+            ):
+                DataClassConfigBuilder(
+                    DatabaseConfigDC, missing_fields="warn"
+                ).from_dict(
+                    {"host": "localhost", "username": "user", "password": "pass"}
+                ).build()
+
+    def test_missing_fields_ignore(self):
+        """missing_fields='ignore' skips pre-check, schema validation still fails."""
+        with pytest.raises(
+            ConfigValidationError, match="Configuration validation failed"
+        ):
+            DataClassConfigBuilder(
+                DatabaseConfigDC, missing_fields="ignore"
+            ).from_dict(
+                {"host": "localhost", "username": "user", "password": "pass"}
+            ).build()
+
+
+@pytest.mark.integration
+class TestConfigBuilderMissingFields:
+    """ConfigBuilder missing_fields validation modes."""
+
+    def test_missing_fields_forbid_by_default(self):
+        """missing_fields='forbid' (default) raises for missing required fields."""
+        with pytest.raises(
+            ConfigValidationError, match="Missing required fields"
+        ):
+            ConfigBuilder(DatabaseConfig).from_dict(
+                {"host": "localhost", "username": "user", "password": "pass"}
+            ).build()
+
+    def test_missing_fields_warn(self):
+        """missing_fields='warn' emits a warning, then Pydantic validation fails."""
+        with pytest.warns(UserWarning, match="Missing required fields"):
+            with pytest.raises(
+                ConfigValidationError, match="Configuration validation failed"
+            ):
+                ConfigBuilder(DatabaseConfig, missing_fields="warn").from_dict(
+                    {"host": "localhost", "username": "user", "password": "pass"}
+                ).build()
+
+    def test_missing_fields_ignore(self):
+        """missing_fields='ignore' skips pre-check, Pydantic validation still fails."""
+        with pytest.raises(
+            ConfigValidationError, match="Configuration validation failed"
+        ):
+            ConfigBuilder(DatabaseConfig, missing_fields="ignore").from_dict(
+                {"host": "localhost", "username": "user", "password": "pass"}
+            ).build()
